@@ -1,19 +1,13 @@
 const axios = require("axios");
+const flex = require("../constants/flexMesaage");
 
 const openRound = async (data) => {
   const dataMsg = data;
+  await replyMessage(dataMsg.replyToken, flex.startRound(data.message));
+};
 
-  if (data.userId === "Uab6dc3240000f41c68d86744421b375d") {
-    await replyMessage(dataMsg.replyToken, {
-      type: "text",
-      text: "เปิดรอบแล้วจ้าาา",
-    });
-  } else {
-    await replyMessage(dataMsg.replyToken, {
-      type: "text",
-      text: "คุณไม่มีสิทธิ์เปิดรอบ",
-    });
-  }
+const getCreadit = async (data) => {
+  await replyMessage(data.replyToken, flex.checkCredit(data));
 };
 const replyMessage = (replyToken, message) => {
   let config = {
@@ -37,12 +31,12 @@ const replyMessage = (replyToken, message) => {
       console.log(JSON.stringify(response.data));
     })
     .catch((error) => {
-      console.log(error);
+      return;
     });
 };
 const getProfileInGroupById = async (groupId, userId) => {
   try {
-    const response = await axios.get(
+    return await axios.get(
       `https://api.line.me/v2/bot/group/${groupId}/member/${userId}`,
       {
         headers: {
@@ -51,13 +45,13 @@ const getProfileInGroupById = async (groupId, userId) => {
         },
       }
     );
-    const json = JSON.stringify(response.data);
-    return JSON.parse(json);
   } catch (error) {
     console.error(error);
     return null; // Handle the error as needed
   }
 };
 module.exports = {
+  getProfileInGroupById,
+  getCreadit,
   openRound,
 };

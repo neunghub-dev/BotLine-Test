@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const ress = [
+        29, 19, 28, 18, 27.5, 17.5, 17, 16, 15, 14, 13, 22, 12, 11, 0,
+      ];
+
+      const data = [
+        {
+          number: 29,
+          isWinner: false,
+          isPok: false,
+        },
+        {
+          number: 11,
+          isWinner: false,
+          isPok: false,
+        },
+        {
+          number: 19,
+          isWinner: false,
+          isPok: false,
+        },
+        {
+          number: 18,
+          isWinner: false,
+          isPok: false,
+        },
+        {
+          number: 28,
+          isWinner: false,
+          isPok: false,
+        },
+        {
+          number: 22,
+          isWinner: false,
+          isPok: false,
+        },
+        {
+          number: 29,
+          isWinner: false,
+          isPok: false,
+        },
+      ];
+
+      let isWinnerExists = false;
+
+      for (const item of ress) {
+        for (const dataItem of data) {
+          if (dataItem.number === item) {
+            dataItem.isWinner = true;
+            if (
+              dataItem.number.toString().charAt(0) === "2" &&
+              dataItem.isWinner === true
+            ) {
+              dataItem.isPok = true;
+            }
+          }
+        }
+        for (const dataItem of data) {
+          if (dataItem.isWinner === true) {
+            isWinnerExists = true;
+            break;
+          }
+        }
+
+        if (isWinnerExists) {
+          break;
+        }
+      }
+
+      console.log(isWinnerExists);
+      console.log(data);
+
+      const winners = data.filter((item) => item.isWinner === true);
+
+      console.log(winners);
+    </script>
+  </body>
+</html>
