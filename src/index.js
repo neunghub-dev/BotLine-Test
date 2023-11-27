@@ -5,7 +5,10 @@ const app = express();
 const port = 3001;
 const routes = require("./routes/index");
 const db = require("./models/index");
+const corsOptions = require("./config/corsOptions");
+const cors = require("cors");
 
+app.use(cors(corsOptions));
 app.use(express.static("src/public"));
 app.use(express.json());
 app.use(

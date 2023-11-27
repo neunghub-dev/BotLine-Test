@@ -116,7 +116,108 @@ const startRound = (data) => {
   };
 };
 
+const showResult = (data) => {
+  return {
+    type: "flex",
+    altText: "Flex Message",
+    contents: {
+      type: "bubble",
+      direction: "ltr",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: "ตรวจสอบผลรอบที่ #123123",
+            align: "center",
+            contents: [],
+          },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        offsetTop: "0px",
+        height: "150px",
+        contents: [
+          {
+            type: "text",
+            text: `${data[0].nameTxt}`,
+            align: "center",
+            offsetTop: "0px",
+            contents: [],
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            offsetTop: "10px",
+            contents: [
+              {
+                type: "text",
+                text: `${data[1].nameTxt}`,
+                align: "center",
+                gravity: "center",
+                contents: [],
+              },
+              {
+                type: "text",
+                text: `${data[2].nameTxt}`,
+                align: "center",
+                gravity: "center",
+                contents: [],
+              },
+            ],
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            offsetTop: "20px",
+            contents: [
+              {
+                type: "text",
+                text: `${data[3].nameTxt}`,
+                align: "center",
+                gravity: "center",
+                contents: [],
+              },
+              {
+                type: "text",
+                text: `${data[4].nameTxt}`,
+                align: "center",
+                gravity: "center",
+                contents: [],
+              },
+            ],
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            offsetTop: "30px",
+            contents: [
+              {
+                type: "text",
+                text: `${data[5].nameTxt}`,
+                align: "center",
+                gravity: "center",
+                contents: [],
+              },
+              {
+                type: "text",
+                text: `${data[6].nameTxt}`,
+                align: "center",
+                gravity: "center",
+                contents: [],
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+};
 module.exports = {
+  showResult,
   checkCredit,
   startRound,
 };

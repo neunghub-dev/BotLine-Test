@@ -1,6 +1,16 @@
 const usersService = require("../services/users.service");
 const transactionService = require("../services/transaction.service");
 
+const getAlluser = async (req, res) => {
+  try {
+    const user = await usersService.getAlluser();
+    return res.status(200).json({
+      status: true,
+      data: user,
+    });
+  } catch (error) {}
+};
+
 const manageCredit = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -92,4 +102,5 @@ const manageCredit = async (req, res) => {
 
 module.exports = {
   manageCredit,
+  getAlluser,
 };

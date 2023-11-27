@@ -1,5 +1,6 @@
 const db = require("../models");
 const rounds = db.rounds;
+const roundDetail = db.round_detail;
 const Op = db.Sequelize.Op;
 
 const createRound = async (data) => {
@@ -7,15 +8,30 @@ const createRound = async (data) => {
   return createRound;
 };
 
-const closeRound = async (data) => {
+const closeRound = async (id, data) => {
   const closeRound = await rounds.update(
     {
-      type: "success",
+      groupId: data,
       isClose: true,
     },
     {
       where: {
-        id: data,
+        id: id,
+      },
+    }
+  );
+  return closeRound;
+};
+
+const closeStatus = async (id, data) => {
+  const closeRound = await rounds.update(
+    {
+      groupId: data,
+      type: "success",
+    },
+    {
+      where: {
+        id: id,
       },
     }
   );
@@ -25,6 +41,7 @@ const closeRound = async (data) => {
 const cancelRound = async (data) => {
   const cancelRound = await rounds.update(
     {
+      groupId: data,
       type: "cancel",
       isClose: true,
     },
@@ -36,10 +53,11 @@ const cancelRound = async (data) => {
   );
   return cancelRound;
 };
-const getRound = async (date) => {
+const getRound = async (data) => {
   //get count
   const count = await rounds.count({
     where: {
+      groupId: data,
       type: "success",
       openRoundAt: {
         [Op.lte]: new Date(),
@@ -48,10 +66,38 @@ const getRound = async (date) => {
   });
   return count;
 };
-const getRoundIdinProgress = async (id) => {
+const getCountRoundInProgress = async (data) => {
+  //get count
+  const count = await rounds.count({
+    where: {
+      groupId: data,
+      isClose: false,
+      openRoundAt: {
+        [Op.lte]: new Date(),
+      },
+    },
+  });
+  return count;
+};
+const getCountRoundInProAndclose = async (data) => {
+  //get count
+  const count = await rounds.count({
+    where: {
+      groupId: data,
+      type: "inProgress",
+      isClose: true,
+      openRoundAt: {
+        [Op.lte]: new Date(),
+      },
+    },
+  });
+  return count;
+};
+const getRoundIdinProgress = async (data) => {
   //get count
   const round = await rounds.findOne({
     where: {
+      groupId: data,
       type: "inProgress",
       openRoundAt: {
         [Op.lte]: new Date(),
@@ -60,9 +106,10 @@ const getRoundIdinProgress = async (id) => {
   });
   return round;
 };
-const checkRoundInprogress = async () => {
+const checkRoundInprogress = async (data) => {
   const round = await rounds.findOne({
     where: {
+      groupId: data,
       type: "inProgress",
       openRoundAt: {
         [Op.lte]: new Date(),
@@ -71,6 +118,36 @@ const checkRoundInprogress = async () => {
   });
   return round;
 };
+
+const getRoundDetailByuserId = async (id) => {
+  const round = await roundDetail.findOne({
+    where: {
+      userId: id,
+    },
+  });
+  return round;
+};
+
+const createRoundDetail = async (data) => {
+  const createRoundDetail = await roundDetail.bulkCreate(data);
+  return createRoundDetail;
+};
+
+const getAllRoundDetailByRoundId = async (id) => {
+  const round = await roundDetail.findAll({
+    include: [
+      {
+        model: db.Users,
+        attributes: ["name", "uuid_line"],
+      },
+    ],
+    where: {
+      roundId: id,
+    },
+  });
+  return round;
+};
+
 module.exports = {
   createRound,
   getRound,
@@ -78,4 +155,10 @@ module.exports = {
   closeRound,
   cancelRound,
   getRoundIdinProgress,
+  getCountRoundInProgress,
+  getRoundDetailByuserId,
+  createRoundDetail,
+  getAllRoundDetailByRoundId,
+  getCountRoundInProAndclose,
+  closeStatus,
 };

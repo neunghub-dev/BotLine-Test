@@ -9,6 +9,10 @@ const openRound = async (data) => {
 const getCreadit = async (data) => {
   await replyMessage(data.replyToken, flex.checkCredit(data));
 };
+
+const showResult = async (replyToken,data) => {
+  await replyMessage(replyToken, flex.showResult(data));
+};
 const replyMessage = (replyToken, message) => {
   let config = {
     method: "post",
@@ -31,6 +35,7 @@ const replyMessage = (replyToken, message) => {
       console.log(JSON.stringify(response.data));
     })
     .catch((error) => {
+      console.error(error.response.data.message);
       return;
     });
 };
@@ -54,4 +59,6 @@ module.exports = {
   getProfileInGroupById,
   getCreadit,
   openRound,
+  replyMessage,
+  showResult,
 };

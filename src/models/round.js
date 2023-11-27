@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       isClose: DataTypes.BOOLEAN,
       openRoundAt: DataTypes.DATE,
       type: DataTypes.ENUM("success", "inProgress", "cancel"),
+      groupId: DataTypes.STRING,
     },
     {
       sequelize,

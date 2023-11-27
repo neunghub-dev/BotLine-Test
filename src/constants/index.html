@@ -7,6 +7,115 @@
   </head>
   <body>
     <script>
+      const inputArray = [
+        {
+          id: 10,
+          roundId: 47,
+          userId: 1,
+          isDeduction: true,
+          ka: "k3",
+          unit: 10,
+          createdAt: "2023-11-25T17:54:09.000Z",
+          updatedAt: "2023-11-25T17:54:09.000Z",
+        },
+        {
+          id: 11,
+          roundId: 47,
+          userId: 1,
+          isDeduction: true,
+          ka: "k1",
+          unit: 1,
+          createdAt: "2023-11-25T17:54:18.000Z",
+          updatedAt: "2023-11-25T17:54:18.000Z",
+        },
+        {
+          id: 19,
+          roundId: 47,
+          userId: 1,
+          isDeduction: true,
+          ka: "k1",
+          unit: 12,
+          createdAt: "2023-11-25T17:54:18.000Z",
+          updatedAt: "2023-11-25T17:54:18.000Z",
+        },
+        {
+          id: 12,
+          roundId: 47,
+          userId: 2,
+          isDeduction: true,
+          ka: "k1",
+          unit: 1,
+          createdAt: "2023-11-25T17:54:36.000Z",
+          updatedAt: "2023-11-25T17:54:36.000Z",
+        },
+      ];
+
+      function convertArray(inputArray) {
+        const outputArray = [];
+
+        inputArray.forEach((item) => {
+          const existingObject = outputArray.find(
+            (obj) => obj.id === item.userId
+          );
+
+          if (existingObject) {
+            const playIndex = existingObject.play.findIndex(
+              (playItem) => playItem.name === item.ka
+            );
+
+            if (playIndex !== -1) {
+              existingObject.play[playIndex].unit += item.unit;
+              existingObject.play[playIndex].isDeduction = item.isDeduction;
+            }
+          } else {
+            const newObject = {
+              id: item.userId,
+              play: [
+                { name: "k1", unit: 0, balance: 0, isDeduction: false },
+                { name: "k2", unit: 0, balance: 0, isDeduction: false },
+                { name: "k3", unit: 0, balance: 0, isDeduction: false },
+                { name: "k4", unit: 0, balance: 0, isDeduction: false },
+                { name: "k5", unit: 0, balance: 0, isDeduction: false },
+                { name: "k6", unit: 0, balance: 0, isDeduction: false },
+              ],
+              unit: 0,
+              total: 0,
+            };
+
+            const playIndex = newObject.play.findIndex(
+              (playItem) => playItem.name === item.ka
+            );
+            if (playIndex !== -1) {
+              newObject.play[playIndex].unit += item.unit;
+              newObject.play[playIndex].isDeduction = item.isDeduction;
+            }
+
+            outputArray.push(newObject);
+          }
+        });
+        outputArray.forEach((obj) => {
+          obj.total = obj.play.reduce(
+            (sum, playItem) => sum + playItem.unit,
+            0
+          );
+        });
+        return outputArray;
+      }
+
+      const results = convertArray(inputArray);
+      console.log(results);
+
+      const result = convertArray(inputArray);
+      console.log(result);
+      const text = "This is an example = using characters = in JavaScript.";
+
+      if (matches) {
+        console.log("Found the following occurrences of '=' or '/':");
+        console.log(matches);
+      } else {
+        console.log("Neither '=' nor '/' found in the text");
+      }
+
       //pok 9*2  = 999
       //pok 9*1 = 998
       //pok 8*2 = 997
