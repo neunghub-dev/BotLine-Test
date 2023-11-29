@@ -10,10 +10,26 @@ const getCreadit = async (data) => {
   await replyMessage(data.replyToken, flex.checkCredit(data));
 };
 
-const showResult = async (replyToken,data) => {
-  await replyMessage(replyToken, flex.showResult(data));
+const showResult = async (replyToken, data) => {
+  console.log("-----------------");
+  console.log(data[0]);
+  console.log("-----------------");
+  await replyMessage(
+    replyToken,
+
+    [flex.showResult(data[0]), flex.showResult3(...data[1])]
+  );
 };
 const replyMessage = (replyToken, message) => {
+  const data = [];
+  if (message.length > 1) {
+    message.forEach((element) => {
+      data.push(element);
+    });
+  } else {
+    data.push(message);
+  }
+
   let config = {
     method: "post",
     maxBodyLength: Infinity,
@@ -25,7 +41,7 @@ const replyMessage = (replyToken, message) => {
     },
     data: JSON.stringify({
       replyToken: replyToken,
-      messages: [message],
+      messages: [...data],
     }),
   };
 
@@ -51,8 +67,8 @@ const getProfileInGroupById = async (groupId, userId) => {
       }
     );
   } catch (error) {
-    console.error(error);
     return null; // Handle the error as needed
+    console.error(error);
   }
 };
 module.exports = {

@@ -122,6 +122,7 @@ const checkRoundInprogress = async (data) => {
 const getRoundDetailByuserId = async (id) => {
   const round = await roundDetail.findOne({
     where: {
+      isCancel: false,
       userId: id,
     },
   });
@@ -142,9 +143,40 @@ const getAllRoundDetailByRoundId = async (id) => {
       },
     ],
     where: {
+      isCancel: false,
       roundId: id,
     },
   });
+  return round;
+};
+const getAllRoundDetailByRoundIdAndUserId = async (roundId, userId) => {
+  const round = await roundDetail.findAll({
+    include: [
+      {
+        model: db.Users,
+        attributes: ["name", "uuid_line"],
+      },
+    ],
+    where: {
+      isCancel: false,
+      roundId: roundId,
+      userId: userId,
+    },
+  });
+  return round;
+};
+
+const updateRoundDetail = async (id) => {
+  const round = await roundDetail.update(
+    {
+      isCancel: true,
+    },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
   return round;
 };
 
@@ -161,4 +193,6 @@ module.exports = {
   getAllRoundDetailByRoundId,
   getCountRoundInProAndclose,
   closeStatus,
+  getAllRoundDetailByRoundIdAndUserId,
+  updateRoundDetail,
 };

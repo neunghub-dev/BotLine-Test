@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       roundId: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
       isDeduction: DataTypes.BOOLEAN,
+      isCancel: DataTypes.BOOLEAN,
       ka: DataTypes.STRING,
       unit: DataTypes.INTEGER,
     },

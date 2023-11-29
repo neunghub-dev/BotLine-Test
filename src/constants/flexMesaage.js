@@ -129,7 +129,7 @@ const showResult = (data) => {
         contents: [
           {
             type: "text",
-            text: "ตรวจสอบผลรอบที่ #123123",
+            text: "ตรวจสอบผลรอบที่ #1",
             align: "center",
             contents: [],
           },
@@ -216,8 +216,72 @@ const showResult = (data) => {
     },
   };
 };
+const showResult2 = (data) => {
+  console.log(data);
+  return {
+    type: "flex",
+    altText: "Flex Message",
+    contents: {
+      type: "bubble",
+      direction: "ltr",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: `ตรวจสอบผลรอบที่ #${"1"}`,
+            align: "center",
+            contents: [],
+          },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        offsetTop: "0px",
+        height: "300px",
+        contents: [...data],
+      },
+    },
+  };
+};
+
+
+const showResult3 = (data) => {
+  console.log(data);
+  return {
+    type: "flex",
+    altText: "Flex Message",
+    contents: {
+      type: "bubble",
+      direction: "ltr",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: `สรุปยอดทั้งหมด #${"1"}`,
+            align: "center",
+            contents: [],
+          },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        offsetTop: "0px",
+        height: "300px",
+        contents: [data],
+      },
+    },
+  };
+};
 module.exports = {
   showResult,
+  showResult2,
+  showResult3,
   checkCredit,
   startRound,
 };
