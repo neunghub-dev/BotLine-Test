@@ -98,11 +98,21 @@ const getRoundIdinProgress = async (data) => {
   const round = await rounds.findOne({
     where: {
       groupId: data,
+      isClose: false,
       type: "inProgress",
-      openRoundAt: {
-        [Op.lte]: new Date(),
-      },
     },
+  });
+  return round;
+};
+const getCloseRoundAndinProgress = async (data) => {
+  //get count
+  const round = await rounds.findOne({
+    where: {
+      groupId: data,
+      isClose: true,
+      type: "inProgress",
+    },
+    order: [["createdAt", "DESC"]],
   });
   return round;
 };
@@ -194,5 +204,6 @@ module.exports = {
   getCountRoundInProAndclose,
   closeStatus,
   getAllRoundDetailByRoundIdAndUserId,
+  getCloseRoundAndinProgress,
   updateRoundDetail,
 };

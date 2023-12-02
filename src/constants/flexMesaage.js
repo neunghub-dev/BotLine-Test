@@ -106,7 +106,7 @@ const startRound = (data) => {
         contents: [
           {
             type: "text",
-            text: `รอบที่ ${data}`,
+            text: `${data}`,
             align: "center",
             contents: [],
           },
@@ -246,7 +246,6 @@ const showResult2 = (data) => {
     },
   };
 };
-
 
 const showResult3 = (data) => {
   console.log(data);

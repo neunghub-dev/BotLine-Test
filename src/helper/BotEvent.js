@@ -12,13 +12,15 @@ const getCreadit = async (data) => {
 
 const showResult = async (replyToken, data) => {
   console.log("-----------------");
-  console.log(data[0]);
+  console.log(data[1]);
   console.log("-----------------");
-  await replyMessage(
-    replyToken,
-
-    [flex.showResult(data[0]), flex.showResult3(...data[1])]
-  );
+  await replyMessage(replyToken, [
+    flex.showResult(data[0]),
+    {
+      type: "text",
+      text: data[1],
+    },
+  ]);
 };
 const replyMessage = (replyToken, message) => {
   const data = [];
@@ -67,7 +69,7 @@ const getProfileInGroupById = async (groupId, userId) => {
       }
     );
   } catch (error) {
-    return null; // Handle the error as needed
+    return; // Handle the error as needed
     console.error(error);
   }
 };
