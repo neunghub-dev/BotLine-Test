@@ -17,6 +17,7 @@ const hookMessageLine = async (req, res) => {
   try {
     if (req.body.events.length !== 0) {
       if (req.body.events[0].message.type === "text") {
+        console.log(req.body.events[0]);
         const message = req.body.events[0].message.text;
         const replyToken = req.body.events[0].replyToken;
         const userId = req.body.events[0].source.userId;
@@ -46,7 +47,7 @@ const hookMessageLine = async (req, res) => {
 
             await BotEvent.getCreadit(data);
             // KeyWord Cancel
-          } else if (message === "x") {
+          } else if (message === "x" || message === "X") {
             // const round = await roundService.getCountRoundInProgress(groupId);
             const round = await roundService.getRoundIdinProgress(groupId);
             console.log(round);
@@ -133,7 +134,7 @@ const hookMessageLine = async (req, res) => {
                 const isRound = await roundService.getRoundIdinProgress(
                   groupId
                 );
-                if (round > 0) {
+                if (isRound) {
                   const id = await usersService.getIdByUUid(userId);
                   const resultArray = message.split("\n");
 
@@ -166,6 +167,49 @@ const hookMessageLine = async (req, res) => {
                   });
 
                   if (resultObjects.length !== 0) {
+                    const sumData = [
+                      { name: "k1", unit: 0 },
+                      { name: "k2", unit: 0 },
+                      { name: "k3", unit: 0 },
+                      { name: "k4", unit: 0 },
+                      { name: "k5", unit: 0 },
+                      { name: "k6", unit: 0 },
+                    ];
+
+                    resultObjects.forEach((item1) => {
+                      sumData.forEach((item2) => {
+                        if (item1.name === item2.name) {
+                          item2.unit += item1.unit;
+                        }
+                      });
+                    });
+                    const to2000 = sumData.filter(
+                      (item) => item.unit > 2000
+                    ).length;
+                    const noi50 = sumData.filter(
+                      (item) => item.unit < 50 && item.unit !== 0
+                    ).length;
+                    console.log("to2000 " + to2000);
+                    console.log("to50 " + noi50);
+                    if (to2000 !== 0 && noi50 !== 0) {
+                      BotEvent.replyMessage(replyToken, {
+                        type: "text",
+                        text: "ไม่สามารถเดิมพันได้น้อยกว่า 50 บาท/ขา หรือ มากกว่า 2000 บาท/ขา",
+                      });
+                      return;
+                    } else if (noi50 !== 0) {
+                      BotEvent.replyMessage(replyToken, {
+                        type: "text",
+                        text: "ไม่สามารถเดิมพันได้น้อยกว่า 50 บาท/ขา",
+                      });
+                      return;
+                    } else if (to2000 !== 0) {
+                      BotEvent.replyMessage(replyToken, {
+                        type: "text",
+                        text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
+                      });
+                      return;
+                    }
                     const oldData = [
                       { name: "k1", unit: 0 },
                       { name: "k2", unit: 0 },
@@ -334,7 +378,7 @@ const hookMessageLine = async (req, res) => {
                       //เช็คยอด
                       const val = await usersService.getCreaditByuserId(userId);
                       let isCheck = false;
-                      if (val.credit > total * 2) {
+                      if (val.credit >= total * 2) {
                         total = total * 2;
                         resultObjects.map((item1) => {
                           data.forEach((item2) => {
@@ -467,8 +511,11 @@ const hookMessageLine = async (req, res) => {
                   //ยอดเก่า -->
                 } else {
                   BotEvent.replyMessage(replyToken, {
-                    type: "text",
-                    text: "ไม่มีรอบที่กำลังเปิดอยู่",
+                    type: "image",
+                    originalContentUrl:
+                      "https://hook.nuenghub-soft.online/img/w13.png",
+                    previewImageUrl:
+                      "https://hook.nuenghub-soft.online/img/w13.png",
                   });
                 }
               }
@@ -480,30 +527,38 @@ const hookMessageLine = async (req, res) => {
           console.log(error);
           return;
         }
-        if (userId === "Uab6dc3240000f41c68d86744421b375d") {
+        if (
+          userId === "Uab6dc3240000f41c68d86744421b375d" ||
+          userId === "U33113ebe5b40a3a017da7dbe921c2b0c" ||
+          userId === "U881888a45c276e2c66039d422326068d" ||
+          userId === "Ub6834bd1c305b10498e15c335ca567ee" ||
+          userId === "Ue43f8f53001fecf7a0fbf027ac43b215"
+        ) {
           // OpenRound
-          if (message === "o") {
+          if (message === "o" || message === "O") {
             const isRound = await roundService.checkRoundInprogress(groupId);
             if (isRound) {
               const data = {
                 message: "มีรอบที่กำลังเปิดอยู่",
                 replyToken: replyToken,
               };
-              await BotEvent.openRound(data);
+              await BotEvent.replyMessage(replyToken, {
+                type: "text",
+                text: "มีรอบที่กำลังเปิดอยู่",
+              });
               return;
             } else {
               const date = new Date();
               const formattedDate = date.toISOString().split("T")[0].toString();
               const getRound = await roundService.getRound(groupId);
-              console.log(getRound);
               const data = {
-                message: parseInt(getRound) + 1,
+                message: `รอบที่ ${parseInt(getRound[0].round) + 1}`,
                 replyToken: replyToken,
                 groupId: groupId,
                 userId: userId,
               };
               const round = {
-                round: parseInt(getRound) + 1,
+                round: parseInt(getRound[0].round) + 1,
                 type: "inProgress",
                 isOpen: true,
                 isClose: false,
@@ -517,7 +572,57 @@ const hookMessageLine = async (req, res) => {
               return;
             }
             // KeyWord CloseRound
-          } else if (message === "y") {
+          } else if (message === "CC" || message === "cc") {
+            const isRound = await roundService.getRoundIdinProgress(groupId);
+            const getRound = await roundService.getRound(groupId);
+
+            if (isRound === null) {
+              const data = {
+                message: "ไม่มีรอบที่กำลังเปิดอยู่",
+                replyToken: replyToken,
+              };
+              await BotEvent.replyMessage(
+                replyToken,
+                BotEvent.replyMessage(replyToken, {
+                  type: "image",
+                  originalContentUrl:
+                    "https://hook.nuenghub-soft.online/img/w13.png",
+                  previewImageUrl:
+                    "https://hook.nuenghub-soft.online/img/w13.png",
+                })
+              );
+              return;
+            } else {
+              const detail = await roundService.getAllRoundDetailByRoundId(
+                isRound.id
+              );
+              const json = JSON.stringify(detail);
+              const detailItem = JSON.parse(json);
+              // const results = await convertArray(
+              //   detailItem,
+              //   groupId,
+              //   replyToken
+              // );
+              let deleteId = [];
+              for (const item of detailItem) {
+                deleteId.push(item.id);
+                const user = await usersService.getCreadit(item.userId);
+                console.log(user);
+                const newCredit = item.isDeduction
+                  ? user.credit + item.unit * 2
+                  : user.credit + item.unit;
+                await usersService.updateCreditById(newCredit, item.userId);
+              }
+              const update = await roundService.updateRoundDetail(deleteId);
+              const cancelRound = await roundService.cancelRound(isRound.id);
+              if (update && cancelRound) {
+                await BotEvent.replyMessage(replyToken, {
+                  type: "text",
+                  text: `ยกเลิกรอบที่ ${isRound.round} เรียบร้อย ❌`,
+                });
+              }
+            }
+          } else if (message === "y" || message === "Y") {
             const isRound = await roundService.getRoundIdinProgress(groupId);
 
             if (isRound === null) {
@@ -525,7 +630,16 @@ const hookMessageLine = async (req, res) => {
                 message: "ไม่มีรอบที่กำลังเปิดอยู่",
                 replyToken: replyToken,
               };
-              await BotEvent.openRound(data);
+              await BotEvent.replyMessage(
+                replyToken,
+                BotEvent.replyMessage(replyToken, {
+                  type: "image",
+                  originalContentUrl:
+                    "https://hook.nuenghub-soft.online/img/w13.png",
+                  previewImageUrl:
+                    "https://hook.nuenghub-soft.online/img/w13.png",
+                })
+              );
               return;
             } else {
               const date = new Date();
@@ -578,7 +692,14 @@ const hookMessageLine = async (req, res) => {
                 );
 
                 await BotEvent.replyMessage(replyToken, [
-                  flex.startRound("ปิดรอบเรียบร้อย"),
+                  // flex.startRound("ปิดรอบเรียบร้อย"),
+                  {
+                    type: "image",
+                    originalContentUrl:
+                      "https://hook.nuenghub-soft.online/img/w11.png",
+                    previewImageUrl:
+                      "https://hook.nuenghub-soft.online/img/w11.png",
+                  },
                   {
                     type: "text",
                     text: dataMsg,
@@ -588,7 +709,7 @@ const hookMessageLine = async (req, res) => {
               return;
             }
           } else if (
-            message.charAt(0) === "s" &&
+            (message.charAt(0) === "s" || message.charAt(0) === "S") &&
             message.split(",").length === 7
           ) {
             const round = await roundService.getCloseRoundAndinProgress(
@@ -650,43 +771,82 @@ const hookMessageLine = async (req, res) => {
                 status: "",
                 isPok: checkPok(item),
               }));
-
-              let isWinnerExists = false;
-              //เช็คผลของแต่ละขา
-              for (const item of transformedData) {
-                if (!item.isLeader) {
-                  if (
-                    item.number.charAt(1) > transformedData[0].number.charAt(2)
-                  ) {
-                    item.status = "winner";
-                  } else if (
-                    item.number.charAt(1) ===
-                    transformedData[0].number.charAt(2)
-                  ) {
-                    item.status = "draw";
+              const dataTotal = [];
+              //  transformedData.map((item) => ({
+              //   dataTotal.push()
+              //   }));
+              transformedData.forEach((e) => {
+                dataTotal.push({
+                  number: e.name === "k0" ? e.number.split("s")[1] : e.number,
+                });
+              });
+              console.log(dataTotal);
+              const query = roundService.updateKa(round.id, dataTotal);
+              if (query) {
+                let isWinnerExists = false;
+                //เช็คผลของแต่ละขา
+                for (const item of transformedData) {
+                  if (!item.isLeader) {
+                    if (
+                      parseFloat(item.number.slice(1)) >
+                      parseFloat(
+                        transformedData[0].number.split("s")[1].slice(1)
+                      )
+                    ) {
+                      item.status = "winner";
+                    } else if (
+                      parseFloat(item.number.slice(1)) ===
+                      parseFloat(
+                        transformedData[0].number.split("s")[1].slice(1)
+                      )
+                    ) {
+                      item.status = "draw";
+                    } else {
+                      item.status = "loser";
+                    }
                   } else {
-                    item.status = "loser";
+                    continue;
                   }
-                } else {
-                  continue;
                 }
-              }
-              console.log(transformedData);
+                console.log(transformedData);
 
-              await BotEvent.showResult(replyToken, [
-                transformedSequence,
-                mssageTotal,
-              ]);
+                await BotEvent.showResult(
+                  replyToken,
+                  [transformedData, mssageTotal],
+                  round.round
+                );
+              }
             } else {
               BotEvent.replyMessage(replyToken, {
                 type: "text",
                 text: "กรุณาปิดรอบก่อนสรุปผล",
               });
             }
-          } else if (message === "cf") {
+          } else if (message === "cf" || message === "Cf" || message === "CF") {
             const round = await roundService.getCloseRoundAndinProgress(
               groupId
             );
+            let sumTotal = 0;
+            let sumBroken = 0;
+            let sumUnit = 0;
+            let diff = 0;
+            const filteredPlayArray = results.map((item) => ({
+              ...item,
+              play: item.play.filter((playItem) => playItem.unit !== 0),
+            }));
+
+            filteredPlayArray.forEach((item) => {
+              item.play.forEach((play) => {
+                if (play.isDeduction) {
+                  sumUnit += play.unit * 2;
+                } else {
+                  sumUnit += play.unit;
+                }
+              });
+              sumTotal += item.total;
+              sumBroken += item.totalBroken;
+            });
+
             if (results.length !== 0) {
               for (const item of results) {
                 const user = await usersService.getCreadit(item.id);
@@ -694,7 +854,12 @@ const hookMessageLine = async (req, res) => {
                 await usersService.addCredit(newCredit, item.id);
               }
               const close = await roundService.closeStatus(round.id, groupId);
-              if (close) {
+              const total = await roundService.updateTotal(
+                round.id,
+                sumUnit,
+                sumBroken
+              );
+              if (close && total) {
                 results = [];
                 messageTotal = "";
                 BotEvent.replyMessage(replyToken, {
@@ -711,6 +876,12 @@ const hookMessageLine = async (req, res) => {
               results = [];
               messageTotal = "";
             }
+          } else if (message === "show") {
+            const getRound = await roundService.getRound(groupId);
+            console.log(getRound.round);
+            // const json = JSON.stringify(getRound);
+            // const roundItem = JSON.parse(json);
+            // console.log(roundItem[0].round);
           }
         }
       }
@@ -731,11 +902,10 @@ const showAll = async (data, gId, round) => {
         (await userLine?.data) === undefined
           ? "ไม่พบผู้ใช้"
           : `${userLine?.data?.displayName}`;
-      msgString += `\n👤 คุณ${name}\n`;
+      msgString += `\n👤 คุณ${name}`;
       entry.play.forEach((play) => {
-        msgString += `ขา ${play.name.charAt(1)} = ${play.unit}บ.\n`;
+        msgString += `ขา ${play.name.charAt(1)}=${play.unit}บ. `;
       });
-      msgString += "-------------------\n";
     }
   } else {
     msgString += "ไม่มีผู้เล่นในรอบนี้";
@@ -777,10 +947,20 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
   //เช็คผลของแต่ละขา
   for (const item of transformedData) {
     if (!item.isLeader) {
-      if (item.number.charAt(1) > transformedData[0].number.charAt(2)) {
+      console.log(item.name);
+      console.log(parseFloat(item.number.slice(1)));
+      console.log(parseFloat(transformedData[0].number.split("s")[1].slice(1)));
+      console.log("----");
+      console.log();
+      console.log("----");
+      if (
+        parseFloat(item.number.slice(1)) >
+        parseFloat(transformedData[0].number.split("s")[1].slice(1))
+      ) {
         item.status = "winner";
       } else if (
-        item.number.charAt(1) === transformedData[0].number.charAt(2)
+        parseFloat(item.number.slice(1)) ===
+        parseFloat(transformedData[0].number.split("s")[1].slice(1))
       ) {
         item.status = "draw";
       } else {
@@ -791,7 +971,7 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
     }
   }
 
-  // console.log(transformedData);
+  console.log(transformedData);
 
   results = await convertArray(detail, groupId, replyToken);
   transformedData.forEach((e) => {
@@ -801,15 +981,24 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
           if (e.status === "winner") {
             if (e.isPok === true) {
               if (play.isDeduction) {
+                console.log("isDeduction 1");
                 play.balance = play.unit * 2 * 2;
                 item.total += play.balance;
               } else {
+                console.log("isDeduction 2");
                 play.balance = play.unit * 2;
                 item.total += play.balance;
               }
             } else {
-              play.balance = play.unit * 2;
-              item.total += play.balance;
+              if (play.isDeduction) {
+                console.log("isDeduction 3");
+                play.balance = play.unit + play.unit * 2;
+                item.total += play.balance;
+              } else {
+                console.log("isDeduction 4");
+                play.balance = play.unit * 2;
+                item.total += play.balance;
+              }
             }
           } else if (e.status === "loser") {
             if (transformedData[0].isPok === true) {
@@ -862,6 +1051,14 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
   };
   let msgString = "";
   msgString += `✅ สรุปยอดรอบที่ ${roundss}\n`;
+
+  results.forEach((obj) => {
+    obj.totalBalance = obj.play.reduce(
+      (sum, playItem) => sum + playItem.balance,
+      0
+    );
+  });
+  console.log(JSON.stringify(results, null, 2));
   if (results.length !== 0) {
     for (const item of results) {
       const userLine = await BotEvent.getProfileInGroupById(groupId, item.uuid);
@@ -870,8 +1067,8 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
         userLine?.data === undefined ? "ไม่พบผู้ใช้" : userLine.data.displayName
       }   `;
       msgString += `${
-        item.total - item.totalBroken > 0
-          ? `+${item.total}`
+        item.totalBalance !== 0
+          ? `+${item.totalBalance}`
           : `-${item.totalBroken}`
       } = ${credit.credit + item.total}\n`;
       msgString += "------------\n";
@@ -918,24 +1115,36 @@ const convertPokNumber = (data) => {
     pok = 995;
   } else if (data === "17.5") {
     pok = 994;
-  } else if (data === "17") {
+  } else if (data === "27") {
     pok = 993;
-  } else if (data === "16") {
+  } else if (data === "17") {
     pok = 992;
-  } else if (data === "15") {
+  } else if (data === "26") {
     pok = 991;
-  } else if (data === "14") {
+  } else if (data === "16") {
     pok = 990;
-  } else if (data === "13") {
+  } else if (data === "25") {
     pok = 989;
-  } else if (data === "22") {
+  } else if (data === "15") {
+    pok = 988;
+  } else if (data === "24") {
     pok = 987;
-  } else if (data === "12") {
+  } else if (data === "14") {
     pok = 986;
-  } else if (data === "11") {
+  } else if (data === "23") {
     pok = 985;
-  } else {
+  } else if (data === "13") {
     pok = 984;
+  } else if (data === "22") {
+    pok = 983;
+  } else if (data === "12") {
+    pok = 982;
+  } else if (data === "21") {
+    pok = 981;
+  } else if (data === "11") {
+    pok = 980;
+  } else {
+    pok = 979;
   }
 
   return pok;
@@ -956,20 +1165,32 @@ const convertPokTxt = (data) => {
     pok = "7.5แต้มเด้ง";
   } else if (data === "17.5") {
     pok = "7.5แต้ม";
+  } else if (data === "27") {
+    pok = "7แต้มเด้ง";
   } else if (data === "17") {
     pok = "7แต้ม";
+  } else if (data === "26") {
+    pok = "6แต้มเด้ง";
   } else if (data === "16") {
     pok = "6แต้ม";
+  } else if (data === "25") {
+    pok = "5แต้มเด้ง";
   } else if (data === "15") {
     pok = "5แต้ม";
+  } else if (data === "24") {
+    pok = "4แต้มเด้ง";
   } else if (data === "14") {
     pok = "4แต้ม";
+  } else if (data === "23") {
+    pok = "3แต้มเด้ง";
   } else if (data === "13") {
     pok = "3แต้ม";
   } else if (data === "22") {
     pok = "2แต้มเด้ง";
   } else if (data === "12") {
     pok = "2แต้ม";
+  } else if (data === "21") {
+    pok = "1แต้มเด้ง";
   } else if (data === "11") {
     pok = "1แต้ม";
   } else {
@@ -996,28 +1217,120 @@ async function convertArray(inputArray, groupId, userId) {
         existingObject.play[playIndex].unit += item.unit;
         // existingObject.play[playIndex].isDeduction = item.isDeduction;
       }
+      const unitTotalMultiplier = item.isDeduction ? 2 : 1;
+
+      // Update unitTotal for each play item
+      existingObject.play.forEach((playItem) => {
+        playItem.unitTotal = playItem.unit * unitTotalMultiplier;
+      });
     } else {
       const newObject = {
         id: item.userId,
         nameLine: "",
         uuid: item.User.uuid_line,
         play: [
-          { name: "k1", unit: 0, balance: 0, broken: 0, isDeduction: false },
-          { name: "k2", unit: 0, balance: 0, broken: 0, isDeduction: false },
-          { name: "k3", unit: 0, balance: 0, broken: 0, isDeduction: false },
-          { name: "k4", unit: 0, balance: 0, broken: 0, isDeduction: false },
-          { name: "k5", unit: 0, balance: 0, broken: 0, isDeduction: false },
-          { name: "k6", unit: 0, balance: 0, broken: 0, isDeduction: false },
-          { name: "k1", unit: 0, balance: 0, broken: 0, isDeduction: true },
-          { name: "k2", unit: 0, balance: 0, broken: 0, isDeduction: true },
-          { name: "k3", unit: 0, balance: 0, broken: 0, isDeduction: true },
-          { name: "k4", unit: 0, balance: 0, broken: 0, isDeduction: true },
-          { name: "k5", unit: 0, balance: 0, broken: 0, isDeduction: true },
-          { name: "k6", unit: 0, balance: 0, broken: 0, isDeduction: true },
+          {
+            name: "k1",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: false,
+          },
+          {
+            name: "k2",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: false,
+          },
+          {
+            name: "k3",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: false,
+          },
+          {
+            name: "k4",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: false,
+          },
+          {
+            name: "k5",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: false,
+          },
+          {
+            name: "k6",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: false,
+          },
+          {
+            name: "k1",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: true,
+          },
+          {
+            name: "k2",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: true,
+          },
+          {
+            name: "k3",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: true,
+          },
+          {
+            name: "k4",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: true,
+          },
+          {
+            name: "k5",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: true,
+          },
+          {
+            name: "k6",
+            unit: 0,
+            balance: 0,
+            broken: 0,
+            unitTotal: 0,
+            isDeduction: true,
+          },
         ],
+        unitTotal: 0,
         unit: 0,
         total: 0,
         totalBroken: 0,
+        totalBalance: 0,
       };
 
       const playIndex = newObject.play.findIndex(
@@ -1032,10 +1345,22 @@ async function convertArray(inputArray, groupId, userId) {
       outputArray.push(newObject);
     }
   }
-
+  outputArray.forEach((obj) => {
+    obj.unitTotal = obj.play.reduce(
+      (sum, playItem) => sum + playItem.unitTotal,
+      0
+    );
+  });
+  outputArray.forEach((obj) => {
+    obj.unitTotal = obj.play.reduce(
+      (sum, playItem) => sum + playItem.unitTotal,
+      0
+    );
+  });
   outputArray.forEach((obj) => {
     obj.unit = obj.play.reduce((sum, playItem) => sum + playItem.unit, 0);
   });
+
   console.log(JSON.stringify(outputArray, null, 2));
   return outputArray;
 }

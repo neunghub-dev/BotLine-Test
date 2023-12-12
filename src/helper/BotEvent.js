@@ -3,19 +3,23 @@ const flex = require("../constants/flexMesaage");
 
 const openRound = async (data) => {
   const dataMsg = data;
-  await replyMessage(dataMsg.replyToken, flex.startRound(data.message));
+  await replyMessage(dataMsg.replyToken, flex.startRound(data.message), {
+    type: "image",
+    originalContentUrl: "https://hook.nuenghub-soft.online/img/w12.png",
+    previewImageUrl: "https://hook.nuenghub-soft.online/img/w12.png",
+  });
 };
 
 const getCreadit = async (data) => {
   await replyMessage(data.replyToken, flex.checkCredit(data));
 };
 
-const showResult = async (replyToken, data) => {
+const showResult = async (replyToken, data, round) => {
   console.log("-----------------");
   console.log(data[1]);
   console.log("-----------------");
   await replyMessage(replyToken, [
-    flex.showResult(data[0]),
+    flex.showResult(data[0], round),
     {
       type: "text",
       text: data[1],

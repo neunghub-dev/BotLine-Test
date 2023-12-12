@@ -7,6 +7,7 @@ const routes = require("./routes/index");
 const db = require("./models/index");
 const corsOptions = require("./config/corsOptions");
 const cors = require("cors");
+const cron = require("./helper/cronjob");
 
 app.use(cors(corsOptions));
 app.use(express.static("src/public"));
@@ -21,7 +22,15 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1", routes);
+
+cron.clearRound();
 // // app.post("/webhook", (req, res) => {
+
+// const clearDailyOrders = cron.schedule("38 10 * * *", () => {
+//   console.log("Cron job clears orders every day at 10:31");
+// });
+
+// clearDailyOrders.start();
 
 db.sequelize
   .sync()

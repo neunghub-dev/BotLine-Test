@@ -1,5 +1,7 @@
 const usersService = require("../services/users.service");
 const transactionService = require("../services/transaction.service");
+const adminService = require("../services/admin.service");
+const bcrypt = require("bcryptjs");
 
 const getAlluser = async (req, res) => {
   try {
@@ -13,8 +15,8 @@ const getAlluser = async (req, res) => {
 
 const manageCredit = async (req, res) => {
   try {
+    const adminId = req.userId;
     const userId = req.params.id;
-    const adminId = 1;
     const { event, credit } = req.body;
     if (!userId || !credit || !event) {
       return res.status(400).json({
@@ -100,7 +102,68 @@ const manageCredit = async (req, res) => {
   } catch (error) {}
 };
 
+const createUser = async (req, res) => {
+  try {
+    const thisRole = req.role;
+    if (thisRole === "admin") {
+      return res.status(400).json({
+        status: false,
+        message: "You don't have permission",
+      });
+    }
+    const { username, password, name, role, tel } = req.body;
+    if (!username || !password || !name || !role || !tel) {
+      return res.status(400).json({
+        status: false,
+        message: "Please fill in all fields",
+      });
+    } else {
+      const checkUsername = await adminService.checkUsername(username);
+      console.log(checkUsername);
+      if (checkUsername) {
+        return res.status(400).json({
+          status: false,
+          message: "Username already exists",
+        });
+      } else {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const data = {
+          name: name,
+          role: "admin",
+          tel: tel,
+          username: username,
+          password: hashedPassword,
+        };
+        const createUser = await adminService.createUser(data);
+        if (!createUser) {
+          return res.status(400).json({
+            status: false,
+            message: "Please fill in all fields",
+          });
+        } else {
+          return res.status(200).json({
+            status: true,
+            message: "Create user success",
+          });
+        }
+      }
+    }
+  } catch (error) {}
+};
+const getAllAdmin = async (req, res) => {
+  try {
+    const user = await adminService.getAllAdmin();
+    return res.status(200).json({
+      status: true,
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   manageCredit,
   getAlluser,
+  createUser,
+  getAllAdmin,
 };

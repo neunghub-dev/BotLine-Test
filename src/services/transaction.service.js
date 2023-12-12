@@ -7,6 +7,27 @@ const createTransaction = async (data) => {
   return createTransaction;
 };
 
+//type add and withdraw
+const getAllTransaction = async (id) => {
+  const tc = await transaction.findAll({
+    include: [
+      {
+        model: db.Users,
+        attributes: ["name", "tel"],
+      },
+      {
+        model: db.admins,
+        attributes: ["name"],
+      },
+    ],
+    where: {
+      [Op.or]: [{ event: "withdraw" }, { event: "add" }],
+    },
+  });
+  return tc;
+};
+
 module.exports = {
   createTransaction,
+  getAllTransaction,
 };

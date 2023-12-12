@@ -2,6 +2,17 @@ const db = require("../models");
 const rounds = db.rounds;
 const roundDetail = db.round_detail;
 const Op = db.Sequelize.Op;
+const fn = db.Sequelize.fn;
+const col = db.Sequelize.col;
+
+const getAllGroupIdLine = async () => {
+  const groupAllId = await rounds.findAll({
+    attributes: [[fn("DISTINCT", col("groupId")), "groupId"]],
+    distinct: true,
+  });
+
+  return groupAllId;
+};
 
 const createRound = async (data) => {
   const createRound = await rounds.create(data);
@@ -23,6 +34,40 @@ const closeRound = async (id, data) => {
   return closeRound;
 };
 
+const updateKa = async (id, data) => {
+  const updateKa = await rounds.update(
+    {
+      k0: data[0].number,
+      k1: data[1].number,
+      k2: data[2].number,
+      k3: data[3].number,
+      k4: data[4].number,
+      k5: data[5].number,
+      k6: data[6].number,
+    },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  return updateKa;
+};
+
+const updateTotal = async (id, sumTotal, difference) => {
+  const updateTotal = await rounds.update(
+    {
+      sumTotal: sumTotal,
+      difference: difference,
+    },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  return updateTotal;
+};
 const closeStatus = async (id, data) => {
   const closeRound = await rounds.update(
     {
@@ -41,30 +86,43 @@ const closeStatus = async (id, data) => {
 const cancelRound = async (data) => {
   const cancelRound = await rounds.update(
     {
-      groupId: data,
       type: "cancel",
       isClose: true,
     },
     {
       where: {
-        id: id,
+        id: data,
       },
     }
   );
   return cancelRound;
 };
 const getRound = async (data) => {
-  //get count
-  const count = await rounds.count({
+  const count = await rounds.findAll({
+    order: [["createdAt", "DESC"]],
+    limit: 1,
     where: {
       groupId: data,
-      type: "success",
+      type: {
+        [Op.or]: ["success", "cancel"],
+      },
       openRoundAt: {
         [Op.lte]: new Date(),
       },
     },
   });
   return count;
+  //get count
+  // const count = await rounds.count({
+  //   where: {
+  //     groupId: data,
+  //     type: "success",
+  //     openRoundAt: {
+  //       [Op.lte]: new Date(),
+  //     },
+  //   },
+  // });
+  // return count;
 };
 const getCountRoundInProgress = async (data) => {
   //get count
@@ -206,4 +264,7 @@ module.exports = {
   getAllRoundDetailByRoundIdAndUserId,
   getCloseRoundAndinProgress,
   updateRoundDetail,
+  updateKa,
+  updateTotal,
+  getAllGroupIdLine,
 };

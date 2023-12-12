@@ -9,6 +9,13 @@ const register = async (req, res) => {
         message: "Please fill in all fields",
       });
     } else {
+      const checkUser = await usersService.checkuuid(uuid);
+      if (checkUser) {
+        return res.status(400).json({
+          status: false,
+          message: "Repeate User",
+        });
+      }
       const data = {
         name,
         tel,

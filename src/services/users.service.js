@@ -69,6 +69,27 @@ const updateCredit = async (credit, uuid) => {
   );
   return user;
 };
+const updateCreditById = async (credit, id) => {
+  const user = await users.update(
+    {
+      credit: credit,
+    },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  return user;
+};
+const checkuuid = async (uuid) => {
+  const user = await users.findOne({
+    where: {
+      uuid_line: uuid,
+    },
+  });
+  return user;
+};
 module.exports = {
   register,
   getCreadit,
@@ -77,4 +98,6 @@ module.exports = {
   updateCredit,
   getIdByUUid,
   getAlluser,
+  checkuuid,
+  updateCreditById,
 };
