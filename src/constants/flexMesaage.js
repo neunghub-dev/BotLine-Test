@@ -15,13 +15,13 @@ const checkCredit = (data) => {
         contents: [
           {
             type: "image",
-            url: "https://developers.line.biz/assets/images/services/bot-designer-icon.png",
+            url: "https://hook.nuenghub-soft.online/img/pic1234.jpeg",
             margin: "none",
             align: "center",
             gravity: "center",
             size: "full",
             aspectMode: "cover",
-            backgroundColor: "#31CFEF",
+            // backgroundColor: "#31CFEF",
             position: "absolute",
             offsetTop: "0px",
             offsetBottom: "0px",
@@ -31,6 +31,7 @@ const checkCredit = (data) => {
           {
             type: "text",
             text: data.name,
+            color: "#ffffff",
             weight: "regular",
             flex: 1,
             align: "center",

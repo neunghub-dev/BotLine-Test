@@ -79,10 +79,11 @@ const hookMessageLine = async (req, res) => {
                 groupId,
                 userId
               );
-              msgString += `👤 คุณ ${user.data.displayName}\n\n`;
+              msgString += `👤 คุณ ${user.data.displayName}\n`;
               const val = await usersService.getCreaditByuserId(userId);
               if (total > 0) {
-                msgString += `❌ ยกเลิกของรอบ ${isRound.round}\n`;
+                msgString += "-------------------\n\n";
+                msgString += `❌ ยกเลิกของรอบ ${isRound.round}\n\n`;
                 msgString += "-------------------\n";
                 msgString += `➡️ คืนเงิน ${total} บ.\n`;
                 msgString += `💵 คงเหลือ ${val.credit + total} บ.\n`;
@@ -369,6 +370,7 @@ const hookMessageLine = async (req, res) => {
                         userId
                       );
                       msgString += `👤 คุณ ${user.data.displayName}\n`;
+                      msgString += "-------------------\n";
                       resultObjects.map((item) => {
                         total += item.unit;
                         // msgString += `✅ ขา ${item.name.charAt(1)} = ${
@@ -484,7 +486,7 @@ const hookMessageLine = async (req, res) => {
                             const checkisDeduction = roundDetailData.every(
                               (item) => item.isDeduction === false
                             );
-                            msgString += "\n-------------------";
+                            msgString += "\n\n-------------------";
                             msgString += `\n${
                               checkisDeduction
                                 ? "⬅️หักไม่เล่นเด้ง"
@@ -947,12 +949,6 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
   //เช็คผลของแต่ละขา
   for (const item of transformedData) {
     if (!item.isLeader) {
-      console.log(item.name);
-      console.log(parseFloat(item.number.slice(1)));
-      console.log(parseFloat(transformedData[0].number.split("s")[1].slice(1)));
-      console.log("----");
-      console.log();
-      console.log("----");
       if (
         parseFloat(item.number.slice(1)) >
         parseFloat(transformedData[0].number.split("s")[1].slice(1))
@@ -984,20 +980,24 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
                 console.log("isDeduction 1");
                 play.balance = play.unit * 2 * 2;
                 item.total += play.balance;
+                play.net += play.unit * 2;
               } else {
                 console.log("isDeduction 2");
                 play.balance = play.unit * 2;
                 item.total += play.balance;
+                play.net += play.unit;
               }
             } else {
               if (play.isDeduction) {
                 console.log("isDeduction 3");
                 play.balance = play.unit + play.unit * 2;
                 item.total += play.balance;
+                play.net += play.unit;
               } else {
                 console.log("isDeduction 4");
                 play.balance = play.unit * 2;
                 item.total += play.balance;
+                play.net += play.unit;
               }
             }
           } else if (e.status === "loser") {
@@ -1058,7 +1058,9 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
       0
     );
   });
-  console.log(JSON.stringify(results, null, 2));
+  results.forEach((obj) => {
+    obj.totalNet = obj.play.reduce((sum, playItem) => sum + playItem.net, 0);
+  });
   if (results.length !== 0) {
     for (const item of results) {
       const userLine = await BotEvent.getProfileInGroupById(groupId, item.uuid);
@@ -1067,9 +1069,9 @@ const calculate = async (res, detail, groupId, replyToken, roundss) => {
         userLine?.data === undefined ? "ไม่พบผู้ใช้" : userLine.data.displayName
       }   `;
       msgString += `${
-        item.totalBalance !== 0
-          ? `+${item.totalBalance}`
-          : `-${item.totalBroken}`
+        item.totalNet - item.totalBroken < 0
+          ? `${item.totalNet - item.totalBroken}`
+          : `+${item.totalNet - item.totalBroken}`
       } = ${credit.credit + item.total}\n`;
       msgString += "------------\n";
     }
@@ -1235,6 +1237,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: false,
           },
           {
@@ -1243,6 +1246,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: false,
           },
           {
@@ -1251,6 +1255,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: false,
           },
           {
@@ -1259,6 +1264,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: false,
           },
           {
@@ -1267,6 +1273,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: false,
           },
           {
@@ -1275,6 +1282,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: false,
           },
           {
@@ -1283,6 +1291,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: true,
           },
           {
@@ -1291,6 +1300,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: true,
           },
           {
@@ -1299,6 +1309,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: true,
           },
           {
@@ -1307,6 +1318,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: true,
           },
           {
@@ -1315,6 +1327,7 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: true,
           },
           {
@@ -1323,9 +1336,11 @@ async function convertArray(inputArray, groupId, userId) {
             balance: 0,
             broken: 0,
             unitTotal: 0,
+            net: 0,
             isDeduction: true,
           },
         ],
+        totalNet: 0,
         unitTotal: 0,
         unit: 0,
         total: 0,
@@ -1345,12 +1360,7 @@ async function convertArray(inputArray, groupId, userId) {
       outputArray.push(newObject);
     }
   }
-  outputArray.forEach((obj) => {
-    obj.unitTotal = obj.play.reduce(
-      (sum, playItem) => sum + playItem.unitTotal,
-      0
-    );
-  });
+
   outputArray.forEach((obj) => {
     obj.unitTotal = obj.play.reduce(
       (sum, playItem) => sum + playItem.unitTotal,
