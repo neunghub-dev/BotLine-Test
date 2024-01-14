@@ -749,7 +749,7 @@ const cancelRound = async (replyToken, userId, groupId) => {
 
 const sentResult = async (replyToken, userId, groupId, message) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
-  const isRound = await roundService.getCountRoundInProAndclose(groupId);
+  // const isRound = await roundService.getCountRoundInProAndclose(groupId);
   if (round !== null) {
     const result = message.split(",");
     const transformedSequence = result.map((number, index) => ({
@@ -795,7 +795,7 @@ const sentResult = async (replyToken, userId, groupId, message) => {
       isPok: checkPok(item),
     }));
     console.log(transformedData);
-    await sortResult(detailItem, transformedData);
+
     for (const item of transformedData) {
       if (!item.isLeader) {
         if (
@@ -815,11 +815,8 @@ const sentResult = async (replyToken, userId, groupId, message) => {
         continue;
       }
     }
-    await BotEvent.showResult(
-      replyToken,
-      [transformedData, "Test"],
-      round.round
-    );
+    await sortResult(detailItem, transformedData, replyToken, round.round);
+
     return;
     mssageTotal = await calculate(
       transformedSequence,
@@ -853,7 +850,7 @@ const sentResult = async (replyToken, userId, groupId, message) => {
     });
   }
 };
-const sortResult = async (res, results) => {
+const sortResult = async (res, results, replyToken, roundNo) => {
   const groupedData = res.reduce((result, item) => {
     const key = `${item.userId}`;
     if (!result[key]) {
@@ -890,6 +887,7 @@ const sortResult = async (res, results) => {
           isKaFightLeader: item.fight === "k0" ? true : false,
           isKaFightKa: item.fight !== "k0" && item.ka !== "k0" ? true : false,
           isLeaderFightKa: item.ka === "k0" ? true : false,
+          status: "",
           unit: 0,
           balance: 0,
           totalBroken: 0,
@@ -919,6 +917,7 @@ const sortResult = async (res, results) => {
       kaItem.balance = result.total;
       kaItem.totalBroken = result.broken;
       kaItem.net = result.net;
+      kaItem.status = result.status;
     }
   }
   finalResult.forEach((obj) => {
@@ -931,6 +930,7 @@ const sortResult = async (res, results) => {
     obj.total = obj.data.reduce((sum, playItem) => sum + playItem.balance, 0);
   });
   console.log(JSON.stringify(finalResult, null, 2));
+  await BotEvent.showResult(replyToken, [results, "Test"], roundNo);
 };
 const calculateResult = async (data, result) => {
   const dataPlayer = {
