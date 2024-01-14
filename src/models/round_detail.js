@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       isDeduction: DataTypes.BOOLEAN,
       isCancel: DataTypes.BOOLEAN,
       ka: DataTypes.STRING,
+      fight: DataTypes.STRING,
       unit: DataTypes.INTEGER,
     },
     {

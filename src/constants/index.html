@@ -1,371 +1,209 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <script>
-      const inputArray = [
-        {
-          id: 10,
-          roundId: 47,
-          userId: 1,
-          isDeduction: true,
-          ka: "k3",
-          unit: 10,
-          createdAt: "2023-11-25T17:54:09.000Z",
-          updatedAt: "2023-11-25T17:54:09.000Z",
-        },
-        {
-          id: 11,
-          roundId: 47,
-          userId: 1,
-          isDeduction: true,
-          ka: "k1",
-          unit: 1,
-          createdAt: "2023-11-25T17:54:18.000Z",
-          updatedAt: "2023-11-25T17:54:18.000Z",
-        },
-        {
-          id: 19,
-          roundId: 47,
-          userId: 1,
-          isDeduction: true,
-          ka: "k1",
-          unit: 12,
-          createdAt: "2023-11-25T17:54:18.000Z",
-          updatedAt: "2023-11-25T17:54:18.000Z",
-        },
-        {
-          id: 12,
-          roundId: 47,
-          userId: 2,
-          isDeduction: true,
-          ka: "k1",
-          unit: 1,
-          createdAt: "2023-11-25T17:54:36.000Z",
-          updatedAt: "2023-11-25T17:54:36.000Z",
-        },
-      ];
+if (round) {
+  const data = JSON.stringify(round);
+  const roundItem = JSON.parse(data);
+  delete roundItem.id;
+  delete roundItem.round;
+  delete roundItem.isOpen;
+  delete roundItem.isClose;
+  delete roundItem.openRoundAt;
+  delete roundItem.type;
+  delete roundItem.groupId;
+  delete roundItem.sumTotal;
+  delete roundItem.difference;
+  delete roundItem.createdAt;
+  delete roundItem.updatedAt;
+  // const result = roundItem.keys(obj).map((key) => [key, obj[key]]);
+  console.log(roundItem);
+  const convertedArray = Object.entries(roundItem).map(
+    ([key, value], index) => ({
+      name: `k${index}`,
+      nameTxt:
+        index === 0
+          ? `ขาเจ้า = ${convertPokTxt(value)}`
+          : `ขา${index} = ${convertPokTxt(value)}`,
+      number: value,
+      convertNumber: convertPokNumber(value),
+      textNumber: convertPokTxt(value),
+    })
+  );
+  const transformedData = convertedArray.map((item) => ({
+    name: item.name,
+    number: item.number,
+    convertNumber: item.convertNumber,
+    isLeader: item.name === "k0",
+    status: "",
+    isPok: checkPok(item),
+  }));
 
-      function convertArray(inputArray) {
-        const outputArray = [];
-
-        inputArray.forEach((item) => {
-          const existingObject = outputArray.find(
-            (obj) => obj.id === item.userId
-          );
-
-          if (existingObject) {
-            const playIndex = existingObject.play.findIndex(
-              (playItem) => playItem.name === item.ka
-            );
-
-            if (playIndex !== -1) {
-              existingObject.play[playIndex].unit += item.unit;
-              existingObject.play[playIndex].isDeduction = item.isDeduction;
-            }
-          } else {
-            const newObject = {
-              id: item.userId,
-              play: [
-                { name: "k1", unit: 0, balance: 0, isDeduction: false },
-                { name: "k2", unit: 0, balance: 0, isDeduction: false },
-                { name: "k3", unit: 0, balance: 0, isDeduction: false },
-                { name: "k4", unit: 0, balance: 0, isDeduction: false },
-                { name: "k5", unit: 0, balance: 0, isDeduction: false },
-                { name: "k6", unit: 0, balance: 0, isDeduction: false },
-              ],
-              unit: 0,
-              total: 0,
-            };
-
-            const playIndex = newObject.play.findIndex(
-              (playItem) => playItem.name === item.ka
-            );
-            if (playIndex !== -1) {
-              newObject.play[playIndex].unit += item.unit;
-              newObject.play[playIndex].isDeduction = item.isDeduction;
-            }
-
-            outputArray.push(newObject);
-          }
-        });
-        outputArray.forEach((obj) => {
-          obj.total = obj.play.reduce(
-            (sum, playItem) => sum + playItem.unit,
-            0
-          );
-        });
-        return outputArray;
-      }
-
-      const results = convertArray(inputArray);
-      console.log(results);
-
-      const result = convertArray(inputArray);
-      console.log(result);
-      const text = "This is an example = using characters = in JavaScript.";
-
-      if (matches) {
-        console.log("Found the following occurrences of '=' or '/':");
-        console.log(matches);
+  for (const item of transformedData) {
+    if (!item.isLeader) {
+      if (
+        parseFloat(item.number.slice(1)) >
+        parseFloat(transformedData[0].number.slice(1))
+      ) {
+        item.status = "winner";
+      } else if (
+        parseFloat(item.number.slice(1)) ===
+        parseFloat(transformedData[0].number.slice(1))
+      ) {
+        item.status = "draw";
       } else {
-        console.log("Neither '=' nor '/' found in the text");
+        item.status = "loser";
       }
-
-      //pok 9*2  = 999
-      //pok 9*1 = 998
-      //pok 8*2 = 997
-      //pok 8*1 = 996
-      //pok 7.5*2 = 995
-      //pok 7.5*1 = 994
-      //pok 7*1 = 993
-      //pok 6*1 = 992
-      //pok 5*1 = 991
-      //pok 4*1 = 990
-      //pok 3*1 = 989
-      //pok 2*2 = 987
-      //pok 2*1 = 986
-      //pok 1*1 = 985
-      //pok 0*1 = 984
-
-      const data = [
-        {
-          name: "k0",
-          number: 997,
-          isLeader: true,
-          status: "",
-          isPok: false,
-        },
-        {
-          name: "k1",
-          number: 989,
-          isLeader: false,
-          status: "",
-          isPok: false,
-        },
-        {
-          name: "k2",
-          number: 998,
-          isLeader: false,
-          status: "",
-          isPok: false,
-        },
-        {
-          name: "k3",
-          number: 997,
-          isLeader: false,
-          status: "",
-          isPok: false,
-        },
-        {
-          name: "k4",
-          number: 999,
-          isLeader: false,
-          status: "",
-          isPok: false,
-        },
-        {
-          name: "k5",
-          number: 999,
-          isLeader: false,
-          status: "",
-          isPok: false,
-        },
-        {
-          name: "k6",
-          number: 990,
-          isLeader: false,
-          status: "",
-          isPok: false,
-        },
-      ];
-
-      let isWinnerExists = false;
-
-      for (const item of data) {
-        if (!item.isLeader) {
-          if (item.number > data[0].number) {
-            item.status = "winner";
-            console.log(item.number);
-            if (
-              item.number === 999 ||
-              item.number === 997 ||
-              item.number === 995 ||
-              item.number === 987
-            ) {
-              item.isPok = true;
-            }
-            console.log(item.isPok);
-          } else if (item.number === data[0].number) {
-            item.status = "draw";
-          } else {
-            if (
-              data[0].number === 999 ||
-              data[0].number === 997 ||
-              data[0].number === 995 ||
-              data[0].number === 987
-            ) {
-              item.isPok = true;
-            }
-            item.status = "loser";
-          }
-        } else {
-          continue;
-        }
-      }
-
-      console.log(data);
-
-      const user = [
-        {
-          id: 1,
-          play: [
-            {
-              name: "k1",
-              unit: 22,
-              balance: 0,
-              isDeduction: true,
-            },
-            {
-              name: "k2",
-              unit: 34,
-              balance: 0,
-              isDeduction: true,
-            },
-            {
-              name: "k3",
-              unit: 46,
-              balance: 0,
-              isDeduction: true,
-            },
-            {
-              name: "k4",
-              unit: 66,
-              balance: 0,
-              isDeduction: true,
-            },
-            {
-              name: "k5",
-              unit: 22,
-              balance: 0,
-              isDeduction: true,
-            },
-            {
-              name: "k6",
-              unit: 10,
-              balance: 0,
-              isDeduction: true,
-            },
-          ],
-          unit: 0,
-          total: 0,
-        },
-        {
-          id: 2,
-          play: [
-            {
-              name: "k1",
-              unit: 32,
-              balance: 0,
-              isDeduction: false,
-            },
-            {
-              name: "k2",
-              unit: 0,
-              balance: 0,
-              isDeduction: false,
-            },
-            {
-              name: "k3",
-              unit: 0,
-              balance: 0,
-              isDeduction: false,
-            },
-            {
-              name: "k4",
-              unit: 34,
-              balance: 0,
-              isDeduction: false,
-            },
-            {
-              name: "k5",
-              unit: 20,
-              balance: 0,
-              isDeduction: false,
-            },
-            {
-              name: "k6",
-              unit: 123,
-              balance: 0,
-              isDeduction: false,
-            },
-          ],
-          unit: 0,
-          total: 0,
-        },
-      ];
-
-      console.log(user);
-
-      data.forEach((e) => {
-        user.forEach((item) => {
-          item.play.forEach((play) => {
-            if (e.name === play.name) {
-              if (e.status === "winner") {
-                if (e.isPok === true) {
-                  if (play.isDeduction) {
-                    play.balance = play.unit * 2 + play.unit;
-                    item.total += play.balance;
-                    item.unit += play.unit;
-                  } else {
-                    play.balance = play.unit * 2;
-                    item.total += play.balance;
-                    item.unit += play.unit;
-                  }
-                } else {
-                  play.balance = play.unit / 2 + play.unit;
-                  item.total += play.balance;
-                  item.unit += play.unit;
-                }
-              } else if (e.status === "loser") {
-                if (e.isPok === true) {
-                  if (play.isDeduction) {
-                    play.balance = 0;
-                    item.total += play.balance;
-                    item.unit += play.unit;
-                  } else {
-                    play.balance = 0;
-                    item.total += play.balance;
-                    item.unit += play.unit;
-                  }
-                } else {
-                  if (e.isPok === true) {
-                    if (play.isDeduction) {
-                      play.balance = play.unit / 2;
-                      item.total += play.balance;
-                      item.unit += play.unit;
-                    } else {
-                      play.balance = 0;
-                      item.total += play.balance;
-                      item.unit += play.unit;
-                    }
-                  }
-                }
-              } else {
-                play.balance = play.unit;
+    } else {
+      continue;
+    }
+  }
+  const detail = await roundService.getAllRoundDetailByRoundId(
+    round.id
+  );
+  const json = JSON.stringify(detail);
+  const detailItem = JSON.parse(json);
+  // console.log(detailItem);
+  const result = await convertArray(detailItem, groupId, userId);
+  console.log(result);
+  transformedData.forEach((e) => {
+    result.forEach((item) => {
+      item.play.forEach((play) => {
+        if (e.name === play.name) {
+          if (e.status === "winner") {
+            if (e.isPok === true) {
+              if (play.isDeduction) {
+                console.log("isDeduction 1");
+                play.balance = play.unit * 2 * 2;
                 item.total += play.balance;
-                item.unit += play.unit;
+                play.net += play.unit * 2;
+              } else {
+                console.log("isDeduction 2");
+                play.balance = play.unit * 2;
+                item.total += play.balance;
+                play.net += play.unit;
+              }
+            } else {
+              if (play.isDeduction) {
+                console.log("isDeduction 3");
+                play.balance = play.unit + play.unit * 2;
+                item.total += play.balance;
+                play.net += play.unit;
+              } else {
+                console.log("isDeduction 4");
+                play.balance = play.unit * 2;
+                item.total += play.balance;
+                play.net += play.unit;
               }
             }
-          });
-        });
+          } else if (e.status === "loser") {
+            if (transformedData[0].isPok === true) {
+              if (play.isDeduction) {
+                play.broken += play.unit * 2;
+                play.balance = 0;
+                item.total += play.balance;
+                item.totalBroken += play.broken;
+              } else {
+                play.broken += play.unit * 1;
+                play.balance = 0;
+                item.total += play.balance;
+                item.totalBroken += play.broken;
+              }
+            } else {
+              if (play.isDeduction) {
+                play.broken += play.unit * 1;
+                play.balance = play.unit * 1;
+                item.total += play.balance;
+                item.totalBroken += play.broken;
+              } else {
+                play.balance = 0;
+                play.broken += 0;
+                item.total += play.balance;
+                item.totalBroken += play.broken;
+              }
+            }
+          } else {
+            if (play.isDeduction) {
+              play.balance = play.unit * 2;
+              item.total += play.balance;
+            } else {
+              play.balance = play.unit * 1;
+              item.total += play.balance;
+            }
+          }
+        }
       });
+    });
+  });
+  result.forEach((obj) => {
+    obj.totalBalance = obj.play.reduce(
+      (sum, playItem) => sum + playItem.balance,
+      0
+    );
+  });
+  result.forEach((obj) => {
+    obj.totalNet = obj.play.reduce(
+      (sum, playItem) => sum + playItem.net,
+      0
+    );
+  });
+  console.log(result);
 
-      console.log(user);
-    </script>
-  </body>
-</html>
+  let sumTotal = 0;
+  let sumBroken = 0;
+  let sumUnit = 0;
+  let diff = 0;
+  const filteredPlayArray = result.map((item) => ({
+    ...item,
+    play: item.play.filter((playItem) => playItem.unit !== 0),
+  }));
+
+  filteredPlayArray.forEach((item) => {
+    item.play.forEach((play) => {
+      if (play.isDeduction) {
+        sumUnit += play.unit * 2;
+      } else {
+        sumUnit += play.unit;
+      }
+    });
+    sumTotal += item.total;
+    sumBroken += item.totalBroken;
+  });
+
+  if (result.length !== 0) {
+    for (const item of result) {
+      const user = await usersService.getCreadit(item.id);
+      const newCredit = user.credit + item.total;
+      await usersService.addCredit(newCredit, item.id);
+    }
+    const close = await roundService.closeStatus(round.id, groupId);
+    const total = await roundService.updateTotal(
+      round.id,
+      sumUnit,
+      sumBroken
+    );
+    if (close && total) {
+      messageTotal = "";
+      BotEvent.replyMessage(replyToken, {
+        type: "text",
+        text: "อัพเดทยอดเรียบร้อย 🎊",
+      });
+    }
+  } else {
+    BotEvent.replyMessage(replyToken, {
+      type: "text",
+      text: "อัพเดทยอดเรียบร้อย 🎊",
+    });
+    await roundService.closeStatus(round.id, groupId);
+
+    messageTotal = "";
+  }
+} else {
+  await BotEvent.replyMessage(
+    replyToken,
+    BotEvent.replyMessage(replyToken, {
+      type: "image",
+      originalContentUrl:
+        "https://hook.nuenghub-soft.online/img/w13.png",
+      previewImageUrl:
+        "https://hook.nuenghub-soft.online/img/w13.png",
+    })
+  );
+  return;
+}

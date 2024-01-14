@@ -1,0 +1,147 @@
+map data 
+[
+    {
+
+        roundId: 4353,
+        userId: 2,
+        isDeduction: true,
+        isCancel: false,
+        ka: 'k1',
+        fight: 'k0',
+        unit: 100,
+        createdAt: '2024-01-13T06:01:59.000Z',
+        updatedAt: '2024-01-13T06:01:59.000Z',
+        User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+      },
+    {
+
+        roundId: 4353,
+        userId: 2,
+        isDeduction: true,
+        isCancel: false,
+        ka: 'k1',
+        fight: 'k0',
+        unit: 100,
+        createdAt: '2024-01-13T06:01:59.000Z',
+        updatedAt: '2024-01-13T06:01:59.000Z',
+        User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+      },
+    {
+
+      roundId: 4353,
+      userId: 1,
+      isDeduction: true,
+      isCancel: false,
+      ka: 'k1',
+      fight: 'k0',
+      unit: 100,
+      createdAt: '2024-01-13T06:01:59.000Z',
+      updatedAt: '2024-01-13T06:01:59.000Z',
+      User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+    },
+    {
+   
+      roundId: 4353,
+      userId: 1,
+      isDeduction: true,
+      isCancel: false,
+      ka: 'k0',
+      fight: 'k2',
+      unit: 10,
+      createdAt: '2024-01-13T06:01:59.000Z',
+      updatedAt: '2024-01-13T06:01:59.000Z',
+      User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+    },
+    {
+
+      roundId: 4353,
+      userId: 1,
+      isDeduction: true,
+      isCancel: false,
+      ka: 'k1',
+      fight: 'k2',
+      unit: 20,
+      createdAt: '2024-01-13T06:01:59.000Z',
+      updatedAt: '2024-01-13T06:01:59.000Z',
+      User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+    }
+    {
+
+        roundId: 4353,
+        userId: 1,
+        isDeduction: true,
+        isCancel: false,
+        ka: 'k1',
+        fight: 'k2',
+        unit: 20,
+        createdAt: '2024-01-13T06:01:59.000Z',
+        updatedAt: '2024-01-13T06:01:59.000Z',
+        User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+      },
+      {
+
+        roundId: 4353,
+        userId: 1,
+        isDeduction: false,
+        isCancel: false,
+        ka: 'k1',
+        fight: 'k2',
+        unit: 10,
+        createdAt: '2024-01-13T06:01:59.000Z',
+        updatedAt: '2024-01-13T06:01:59.000Z',
+        User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+      }
+  ]
+
+to
+
+  [
+    {
+    userId: 2,
+    isDeduction: true,
+    isCancel: false,
+    ka: 'k1',
+    fight: 'k0',
+    unit: 200,
+    User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' },
+    },
+  {
+    userId: 1,
+    User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' },
+
+    isDeduction: true,
+    isCancel: false,
+    ka: 'k1',
+    fight: 'k2',
+    unit: 40,
+  },
+  {
+    userId: 1,
+    User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' },
+
+    isDeduction: false,
+    isCancel: false,
+    ka: 'k1',
+    fight: 'k2',
+    unit: 10,
+  },
+  {
+
+    userId: 1,
+    isDeduction: true,
+    isCancel: false,
+    ka: 'k0',
+    fight: 'k2',
+    unit: 10,
+    User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+  },
+
+  userId: 1,
+  isDeduction: true,
+  isCancel: false,
+  ka: 'k1',
+  fight: 'k0',
+  unit: 100,
+  User: { name: 'หนึ่ง', uuid_line: 'Uab6dc3240000f41c68d86744421b375d' }
+
+  ]

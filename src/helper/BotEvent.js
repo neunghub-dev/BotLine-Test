@@ -42,7 +42,7 @@ const replyMessage = (replyToken, message) => {
     url: "https://api.line.me/v2/bot/message/reply",
     headers: {
       Authorization:
-        "Bearer Ww+VXPtfsqj1kn1WX2aOqM3KTJLJqvfudBt3qTQel/dSzNbnelibvBNvoF1jxXOuHjqfIh2r0z8hCaeD0zvr77cEIJB8LwnNKfGuEcgdmH4BEbGbPFtx8NZVV0hiis2xH/Ruy/WH/R4k3SDbkKSKBQdB04t89/1O/w1cDnyilFU=",
+        "Bearer nUBRigFgMx0ZiILPCnRGSOlfAwuv7+QzsqNMA2yunGWfzM+7yjbRQ/tsJEXzn5UdjknV5WdQp2wXWV+nSf+PKHDiHZXcvWcuHBop4ELnRLnRhe7UbknyYuMEQKrmG7c4xllLS/u7SlPU2NX+06z2dgdB04t89/1O/w1cDnyilFU=",
       "Content-Type": "application/json",
     },
     data: JSON.stringify({
@@ -68,7 +68,7 @@ const getProfileInGroupById = async (groupId, userId) => {
       {
         headers: {
           Authorization:
-            "Bearer Ww+VXPtfsqj1kn1WX2aOqM3KTJLJqvfudBt3qTQel/dSzNbnelibvBNvoF1jxXOuHjqfIh2r0z8hCaeD0zvr77cEIJB8LwnNKfGuEcgdmH4BEbGbPFtx8NZVV0hiis2xH/Ruy/WH/R4k3SDbkKSKBQdB04t89/1O/w1cDnyilFU=",
+            "Bearer nUBRigFgMx0ZiILPCnRGSOlfAwuv7+QzsqNMA2yunGWfzM+7yjbRQ/tsJEXzn5UdjknV5WdQp2wXWV+nSf+PKHDiHZXcvWcuHBop4ELnRLnRhe7UbknyYuMEQKrmG7c4xllLS/u7SlPU2NX+06z2dgdB04t89/1O/w1cDnyilFU=",
         },
       }
     );
