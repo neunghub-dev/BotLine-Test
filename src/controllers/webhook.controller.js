@@ -115,14 +115,12 @@ const showAll = async (data, gId, round) => {
 const checkPok = (data) => {
   console.log(data.name);
   if (data.name === "k0") {
-    console.log(data.number.charAt(1));
     if (data.number.charAt(1) === "2") {
       return true;
     } else {
       return false;
     }
   } else {
-    console.log(data.number.charAt(0));
     if (data.number.charAt(0) === "2") {
       return true;
     } else {
@@ -797,7 +795,31 @@ const sentResult = async (replyToken, userId, groupId, message) => {
       isPok: checkPok(item),
     }));
     console.log(transformedData);
-    await calculateResult(detailItem);
+    await sortResult(detailItem, transformedData);
+    for (const item of transformedData) {
+      if (!item.isLeader) {
+        if (
+          parseFloat(item.number.slice(1)) >
+          parseFloat(transformedData[0].number.split("s")[1].slice(1))
+        ) {
+          item.status = "winner";
+        } else if (
+          parseFloat(item.number.slice(1)) ===
+          parseFloat(transformedData[0].number.split("s")[1].slice(1))
+        ) {
+          item.status = "draw";
+        } else {
+          item.status = "loser";
+        }
+      } else {
+        continue;
+      }
+    }
+    await BotEvent.showResult(
+      replyToken,
+      [transformedData, "Test"],
+      round.round
+    );
     return;
     mssageTotal = await calculate(
       transformedSequence,
@@ -821,32 +843,8 @@ const sentResult = async (replyToken, userId, groupId, message) => {
     if (query) {
       let isWinnerExists = false;
       //เช็คผลของแต่ละขา
-      for (const item of transformedData) {
-        if (!item.isLeader) {
-          if (
-            parseFloat(item.number.slice(1)) >
-            parseFloat(transformedData[0].number.split("s")[1].slice(1))
-          ) {
-            item.status = "winner";
-          } else if (
-            parseFloat(item.number.slice(1)) ===
-            parseFloat(transformedData[0].number.split("s")[1].slice(1))
-          ) {
-            item.status = "draw";
-          } else {
-            item.status = "loser";
-          }
-        } else {
-          continue;
-        }
-      }
-      console.log(transformedData);
 
-      await BotEvent.showResult(
-        replyToken,
-        [transformedData, mssageTotal],
-        round.round
-      );
+      console.log(transformedData);
     }
   } else {
     BotEvent.replyMessage(replyToken, {
@@ -855,13 +853,14 @@ const sentResult = async (replyToken, userId, groupId, message) => {
     });
   }
 };
-const calculateResult = async (res) => {
+const sortResult = async (res, results) => {
   const groupedData = res.reduce((result, item) => {
     const key = `${item.userId}`;
     if (!result[key]) {
       result[key] = {
         userId: item.userId,
         User: item.User,
+
         data: [],
       };
     }
@@ -882,12 +881,19 @@ const calculateResult = async (res) => {
   const finalResult = Object.values(groupedData).map((userItem) => {
     const groupedData = userItem.data.reduce((result, item) => {
       const key = `${item.isDeduction}_${item.ka}_${item.fight}`;
+      console.log(key);
       if (!result[key]) {
         result[key] = {
           isDeduction: item.isDeduction,
           ka: item.ka,
           fight: item.fight,
+          isKaFightLeader: item.fight === "k0" ? true : false,
+          isKaFightKa: item.fight !== "k0" && item.ka !== "k0" ? true : false,
+          isLeaderFightKa: item.ka === "k0" ? true : false,
           unit: 0,
+          balance: 0,
+          totalBroken: 0,
+          net: 0,
         };
       }
       result[key].unit += item.unit;
@@ -900,14 +906,141 @@ const calculateResult = async (res) => {
       userId: userItem.userId,
       User: userItem.User,
       data: groupedArray,
+      totalUnit: 0,
+      totalBroken: 0,
+      totalNet: 0,
+      total: 0,
     };
   });
 
-
-
+  for (const userItem of finalResult) {
+    for (const kaItem of userItem.data) {
+      const result = await calculateResult(kaItem, results);
+      kaItem.balance = result.total;
+      kaItem.totalBroken = result.broken;
+      kaItem.net = result.net;
+    }
+  }
+  finalResult.forEach((obj) => {
+    obj.totalUnit = obj.data.reduce((sum, playItem) => sum + playItem.unit, 0);
+    obj.totalBroken = obj.data.reduce(
+      (sum, playItem) => sum + playItem.totalBroken,
+      0
+    );
+    obj.totalNet = obj.data.reduce((sum, playItem) => sum + playItem.net, 0);
+    obj.total = obj.data.reduce((sum, playItem) => sum + playItem.balance, 0);
+  });
   console.log(JSON.stringify(finalResult, null, 2));
 };
+const calculateResult = async (data, result) => {
+  const dataPlayer = {
+    status: "",
+    kaItem: "",
+    fightItem: "",
+    isDeduction: data.isDeduction,
+    isKaFightLeader: data.isKaFightLeader,
+    isKaFightKa: data.isKaFightKa,
+    isLeaderFightKa: data.isLeaderFightKa,
+    isPok: false,
+    unit: data.unit,
+    deduction: 0,
+    total: 0,
+    net: 0,
+    broken: 0,
+  };
+  const ka = result.find((item) => item.name === data.ka);
+  const fg = result.find((item) => item.name === data.fight);
+  dataPlayer.kaItem = ka.convertNumber;
+  dataPlayer.fightItem = fg.convertNumber;
 
+  if (dataPlayer.kaItem > dataPlayer.fightItem) {
+    dataPlayer.status = "winner";
+    dataPlayer.isPok = await checkPok(ka);
+  } else if (dataPlayer.kaItem === dataPlayer.fightItem) {
+    dataPlayer.status = "draw";
+  } else {
+    dataPlayer.isPok = await checkPok(fg);
+    dataPlayer.status = "loser";
+  }
+  if (dataPlayer.isKaFightLeader) {
+    if (dataPlayer.status === "winner") {
+      if (dataPlayer.isPok === true) {
+        if (dataPlayer.isDeduction) {
+          dataPlayer.total = dataPlayer.unit * 2 * 2;
+          dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
+          dataPlayer.net += dataPlayer.unit * 2;
+        } else {
+          dataPlayer.balance = dataPlayer.unit * 2;
+          dataPlayer.deduction = 0;
+          dataPlayer.net += dataPlayer.unit;
+        }
+      } else {
+        if (dataPlayer.isDeduction) {
+          dataPlayer.balance = dataPlayer.unit + dataPlayer.unit * 2;
+          dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
+          dataPlayer.net += dataPlayer.unit;
+        } else {
+          dataPlayer.balance = dataPlayer.unit * 2;
+          dataPlayer.deduction = 0;
+          dataPlayer.net += dataPlayer.unit;
+        }
+      }
+    }
+  } else {
+    if (dataPlayer.status === "winner") {
+      if (dataPlayer.isPok === true) {
+        if (dataPlayer.isDeduction) {
+          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 2 * 90) / 100);
+          dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
+          dataPlayer.net += dataPlayer.unit * 2;
+        } else {
+          dataPlayer.balance = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.deduction = 0;
+          dataPlayer.net += dataPlayer.unit;
+        }
+      } else {
+        if (dataPlayer.isDeduction) {
+          dataPlayer.balance = Math.floor(
+            (dataPlayer.unit + dataPlayer.unit * 2 * 90) / 100
+          );
+          dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
+          dataPlayer.net += dataPlayer.unit;
+        } else {
+          dataPlayer.balance = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.deduction = 0;
+          dataPlayer.net += dataPlayer.unit;
+        }
+      }
+    }
+  }
+  if (dataPlayer.status === "loser") {
+    if (dataPlayer.isPok === true) {
+      if (dataPlayer.isDeduction) {
+        dataPlayer.broken += dataPlayer.unit * 2;
+        dataPlayer.total += 0;
+      } else {
+        dataPlayer.broken += dataPlayer.unit * 1;
+        dataPlayer.total += 0;
+        dataPlayer.totalBroken += dataPlayer.broken;
+      }
+    } else {
+      if (dataPlayer.isDeduction) {
+        dataPlayer.broken += dataPlayer.unit * 1;
+        dataPlayer.total += dataPlayer.unit * 1;
+      } else {
+        dataPlayer.broken += 0;
+        dataPlayer.total += 0;
+      }
+    }
+  } else {
+    if (dataPlayer.isDeduction) {
+      dataPlayer.total += dataPlayer.unit * 2;
+    } else {
+      dataPlayer.total += dataPlayer.unit * 1;
+    }
+  }
+  return dataPlayer;
+};
 const confirmRound = async (replyToken, userId, groupId) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
   let sumTotal = 0;
