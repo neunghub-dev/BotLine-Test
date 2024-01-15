@@ -15,15 +15,9 @@ const getCreadit = async (data) => {
 };
 
 const showResult = async (replyToken, data, round) => {
-  console.log("-----------------");
-  console.log(data[1]);
-  console.log("-----------------");
   await replyMessage(replyToken, [
     flex.showResult(data[0], round),
-    {
-      type: "text",
-      text: data[1],
-    },
+    flex.showResultAll(data[1]),
   ]);
 };
 const replyMessage = (replyToken, message) => {
@@ -57,7 +51,7 @@ const replyMessage = (replyToken, message) => {
       console.log(JSON.stringify(response.data));
     })
     .catch((error) => {
-      console.error(error.response.data.message);
+      console.error(error.response);
       return;
     });
 };

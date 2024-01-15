@@ -110,7 +110,6 @@ const startRound = (data) => {
 };
 
 const showResult = (data, round) => {
-  console.log(data[4].status);
   return {
     type: "flex",
     altText: "Flex Message",
@@ -503,10 +502,159 @@ const showResult3 = (data) => {
     },
   };
 };
+
+const showResultAll = (data) => {
+  return {
+    type: "flex",
+    altText: "Flex Message",
+    contents: {
+      type: "carousel",
+      contents: [
+        {
+          type: "bubble",
+          direction: "ltr",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "PD789",
+                align: "center",
+                contents: [],
+              },
+              {
+                type: "text",
+                text: "สรุปการเดิมพันรอบที่",
+                align: "center",
+                contents: [],
+              },
+            ],
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "none",
+            margin: "none",
+            contents: [
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                margin: "sm",
+                contents: [
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    contents: [],
+                  },
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    align: "end",
+                    contents: [],
+                  },
+                ],
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                margin: "md",
+                contents: [
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    contents: [],
+                  },
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    align: "end",
+                    contents: [],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          type: "bubble",
+          direction: "ltr",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "PD789",
+                align: "center",
+                contents: [],
+              },
+              {
+                type: "text",
+                text: "สรุปการเดิมพันรอบที่",
+                align: "center",
+                contents: [],
+              },
+            ],
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "none",
+            margin: "none",
+            contents: [
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                margin: "sm",
+                contents: [
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    contents: [],
+                  },
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    align: "end",
+                    contents: [],
+                  },
+                ],
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                margin: "md",
+                contents: [
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    contents: [],
+                  },
+                  {
+                    type: "text",
+                    text: "hello, world",
+                    align: "end",
+                    contents: [],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+  };
+};
 module.exports = {
   showResult,
   showResult2,
   showResult3,
   checkCredit,
   startRound,
+  showResultAll,
 };
