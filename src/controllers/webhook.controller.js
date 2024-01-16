@@ -113,7 +113,6 @@ const showAll = async (data, gId, round) => {
   return msgString;
 };
 const checkPok = (data) => {
-  console.log(data.name);
   if (data.name === "k0") {
     if (data.number.charAt(1) === "2") {
       return true;
@@ -778,7 +777,7 @@ const sentResult = async (replyToken, userId, groupId, message) => {
     }));
     console.log(transformedSequence);
     // return;
-
+    console.log(round.id);
     const detail = await roundService.getAllRoundDetailByRoundId(round.id);
     const json = JSON.stringify(detail);
     const detailItem = JSON.parse(json);
@@ -794,7 +793,6 @@ const sentResult = async (replyToken, userId, groupId, message) => {
       status: "",
       isPok: checkPok(item),
     }));
-    console.log(transformedData);
 
     for (const item of transformedData) {
       if (!item.isLeader) {
@@ -815,7 +813,23 @@ const sentResult = async (replyToken, userId, groupId, message) => {
         continue;
       }
     }
-    await sortResult(detailItem, transformedData, replyToken, round.round);
+    const dataTotal = [];
+    transformedData.forEach((e) => {
+      dataTotal.push({
+        number: e.name === "k0" ? e.number.split("s")[1] : e.number,
+      });
+    });
+    const saveResult = await roundService.updateKa(round.id, dataTotal);
+    if (saveResult) {
+      const dataSort = await sortResult(
+        detailItem,
+        transformedData,
+        replyToken,
+        round.round,
+        groupId
+      );
+      await BotEvent.showResult(replyToken, dataSort, round.round);
+    }
 
     return;
     mssageTotal = await calculate(
@@ -826,7 +840,6 @@ const sentResult = async (replyToken, userId, groupId, message) => {
       round.round
     );
 
-    const dataTotal = [];
     //  transformedData.map((item) => ({
     //   dataTotal.push()
     //   }));
@@ -850,7 +863,7 @@ const sentResult = async (replyToken, userId, groupId, message) => {
     });
   }
 };
-const sortResult = async (res, results, replyToken, roundNo) => {
+const sortResult = async (res, results, replyToken, roundNo, groupId) => {
   const groupedData = res.reduce((result, item) => {
     const key = `${item.userId}`;
     if (!result[key]) {
@@ -888,6 +901,7 @@ const sortResult = async (res, results, replyToken, roundNo) => {
           isKaFightKa: item.fight !== "k0" && item.ka !== "k0" ? true : false,
           isLeaderFightKa: item.ka === "k0" ? true : false,
           status: "",
+          income: 0,
           unit: 0,
           balance: 0,
           totalBroken: 0,
@@ -908,12 +922,14 @@ const sortResult = async (res, results, replyToken, roundNo) => {
       totalBroken: 0,
       totalNet: 0,
       total: 0,
+      totalIncome: 0,
     };
   });
 
   for (const userItem of finalResult) {
     for (const kaItem of userItem.data) {
       const result = await calculateResult(kaItem, results);
+      kaItem.income = result.income;
       kaItem.balance = result.total;
       kaItem.totalBroken = result.broken;
       kaItem.net = result.net;
@@ -928,9 +944,101 @@ const sortResult = async (res, results, replyToken, roundNo) => {
     );
     obj.totalNet = obj.data.reduce((sum, playItem) => sum + playItem.net, 0);
     obj.total = obj.data.reduce((sum, playItem) => sum + playItem.balance, 0);
+    obj.totalIncome = obj.data.reduce(
+      (sum, playItem) => sum + playItem.income,
+      0
+    );
   });
+  const data1 = [];
+  for (let i of finalResult) {
+    const userLine = await BotEvent.getProfileInGroupById(
+      groupId,
+      i.User.uuid_line
+    );
+    const credit = await usersService.getCreadit(i.userId);
+    const data = {
+      name:
+        userLine?.data === undefined
+          ? "ไม่พบผู้ใช้"
+          : userLine.data.displayName,
+      unit: `${
+        i.totalIncome - i.totalBroken < 0
+          ? `${i.totalIncome - i.totalBroken}`
+          : `+${i.totalIncome - i.totalBroken}`
+      } = ${credit.credit + i.total}\n`,
+    };
+    data1.push(data);
+  }
   console.log(JSON.stringify(finalResult, null, 2));
-  await BotEvent.showResult(replyToken, [results, "Test"], roundNo);
+
+  // for (let i = 0; i < 30; i++) {
+  //   data1.push({
+  //     name: `k${i}`,
+  //     unit: 31231232321,
+  //   });
+  // }
+  const showData = chunkArray(data1, 25);
+  const allData = [];
+  for (let i of showData) {
+    const result = [];
+    for (let j of i) {
+      result.push({
+        type: "box",
+        layout: "baseline",
+        spacing: "xs",
+        margin: "xs",
+        contents: [
+          {
+            type: "text",
+            size: "xxs",
+            text: j.name,
+            contents: [],
+          },
+          {
+            type: "text",
+            size: "xxs",
+            wrap: true,
+            text: j.unit.toString(),
+            align: "end",
+            contents: [],
+          },
+        ],
+      });
+    }
+    const data = {
+      type: "bubble",
+      direction: "ltr",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: `สรุปการเดิมพันรอบที่ ${roundNo}`,
+            align: "center",
+            contents: [],
+          },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        spacing: "none",
+        margin: "none",
+        contents: result,
+      },
+    };
+    allData.push(data);
+  }
+  return [results, allData, finalResult];
+  // await BotEvent.showResult(replyToken, [results, allData], roundNo);
+};
+const chunkArray = (array, size) => {
+  const chunked_arr = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunked_arr.push(array.slice(i, i + size));
+  }
+  return chunked_arr;
 };
 const calculateResult = async (data, result) => {
   const dataPlayer = {
@@ -943,6 +1051,7 @@ const calculateResult = async (data, result) => {
     isLeaderFightKa: data.isLeaderFightKa,
     isPok: false,
     unit: data.unit,
+    income: 0,
     deduction: 0,
     total: 0,
     net: 0,
@@ -969,20 +1078,24 @@ const calculateResult = async (data, result) => {
           dataPlayer.total = dataPlayer.unit * 2 * 2;
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit * 2;
+          dataPlayer.income = dataPlayer.unit * 2 * 2;
         } else {
-          dataPlayer.balance = dataPlayer.unit * 2;
+          dataPlayer.total = dataPlayer.unit * 2;
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
+          dataPlayer.income = dataPlayer.unit * 2;
         }
       } else {
         if (dataPlayer.isDeduction) {
-          dataPlayer.balance = dataPlayer.unit + dataPlayer.unit * 2;
+          dataPlayer.total = dataPlayer.unit + dataPlayer.unit * 2;
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit;
+          dataPlayer.income = dataPlayer.unit * 2;
         } else {
-          dataPlayer.balance = dataPlayer.unit * 2;
+          dataPlayer.total = dataPlayer.unit * 2;
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
+          dataPlayer.income = dataPlayer.unit * 2;
         }
       }
     }
@@ -993,22 +1106,28 @@ const calculateResult = async (data, result) => {
           dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 2 * 90) / 100);
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit * 2;
+          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 2 * 90) / 100);
         } else {
-          dataPlayer.balance = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 90) / 100);
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
+          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 90) / 100);
         }
       } else {
         if (dataPlayer.isDeduction) {
-          dataPlayer.balance = Math.floor(
+          dataPlayer.total = Math.floor(
             (dataPlayer.unit + dataPlayer.unit * 2 * 90) / 100
           );
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit;
+          dataPlayer.income = Math.floor(
+            (dataPlayer.unit + dataPlayer.unit * 2 * 90) / 100
+          );
         } else {
-          dataPlayer.balance = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 90) / 100);
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
+          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 90) / 100);
         }
       }
     }
@@ -1043,6 +1162,113 @@ const calculateResult = async (data, result) => {
 };
 const confirmRound = async (replyToken, userId, groupId) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
+  // round.k0
+  const result = [
+    `s${round.k0}`,
+    round.k1,
+    round.k2,
+    round.k3,
+    round.k4,
+    round.k5,
+    round.k6,
+  ];
+  console.log(result);
+  const transformedSequence = [];
+  for (let n in result) {
+    const data = {
+      name: `k${n}`,
+      number: result[n],
+      convertNumber: convertPokNumber(result[n]),
+    };
+    transformedSequence.push(data);
+  }
+  // console.log(transformedSequence);
+  const transformedData = transformedSequence.map((item) => ({
+    name: item.name,
+    number: item.number,
+    convertNumber: item.convertNumber,
+    isLeader: item.name === "k0",
+    color: "",
+    status: "",
+    isPok: checkPok(item),
+  }));
+
+  for (const item of transformedData) {
+    if (!item.isLeader) {
+      if (
+        parseFloat(item.number.slice(1)) >
+        parseFloat(transformedData[0].number.split("s")[1].slice(1))
+      ) {
+        item.status = "winner";
+      } else if (
+        parseFloat(item.number.slice(1)) ===
+        parseFloat(transformedData[0].number.split("s")[1].slice(1))
+      ) {
+        item.status = "draw";
+      } else {
+        item.status = "loser";
+      }
+    } else {
+      continue;
+    }
+  }
+  console.log(transformedData);
+  // const transformedSequence = result.map((number, index) => ({
+
+  const detail = await roundService.getAllRoundDetailByRoundId(round.id);
+  const json = JSON.stringify(detail);
+  const detailItem = JSON.parse(json);
+  console.log(detailItem);
+
+  const dataSort = await sortResult(
+    detailItem,
+    transformedData,
+    replyToken,
+    round.round,
+    groupId
+  );
+
+  // console.log(JSON.stringify(dataSort[2], null, 2));
+  // return;
+  if (dataSort[2].length !== 0) {
+    let sumTotal = 0;
+    let sumBroken = 0;
+    let sumUnit = 0;
+    for (const item of dataSort[2]) {
+      item.data.forEach((play) => {
+        if (play.isDeduction) {
+          sumUnit += play.unit * 2;
+        } else {
+          sumUnit += play.unit;
+        }
+      });
+      sumTotal += item.balance;
+      sumBroken += item.totalBroken;
+      const user = await usersService.getCreadit(item.userId);
+      const newCredit = user.credit + item.total;
+      await usersService.addCredit(newCredit, item.userId);
+    }
+    const close = await roundService.closeStatus(round.id, groupId);
+    const total = await roundService.updateTotal(round.id, sumUnit, sumBroken);
+    if (close && total) {
+      results = [];
+      messageTotal = "";
+      BotEvent.replyMessage(replyToken, {
+        type: "text",
+        text: "อัพเดทยอดเรียบร้อย 🎊",
+      });
+    }
+  } else {
+    BotEvent.replyMessage(replyToken, {
+      type: "text",
+      text: "อัพเดทยอดเรียบร้อย 🎊",
+    });
+    await roundService.closeStatus(round.id, groupId);
+    results = [];
+    messageTotal = "";
+  }
+
+  return;
   let sumTotal = 0;
   let sumBroken = 0;
   let sumUnit = 0;
