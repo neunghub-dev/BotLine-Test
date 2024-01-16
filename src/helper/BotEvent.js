@@ -21,6 +21,7 @@ const showResult = async (replyToken, data, round) => {
   ]);
 };
 const replyMessage = (replyToken, message) => {
+  console.log(message);
   const data = [];
   if (message.length > 1) {
     message.forEach((element) => {

@@ -644,15 +644,46 @@ const closeRound = async (replyToken, userId, groupId) => {
     const date = new Date();
     const formattedDate = date.toISOString().split("T")[0].toString();
     const round = await roundService.getRoundIdinProgress(groupId);
-    const json = JSON.stringify(round);
-    const roundItem = JSON.parse(json);
-    const updateRound = await roundService.closeRound(roundItem.id, groupId);
-    if (updateRound) {
+    // const json = JSON.stringify(round);
+    // const roundItem = JSON.parse(json);
+    // const updateRound = await roundService.closeRound(roundItem.id, groupId);
+
+    if (true) {
       const detail = await roundService.getAllRoundDetailByRoundId(round.id);
       const json = JSON.stringify(detail);
       const detailItem = JSON.parse(json);
-      const result = await convertArray(detailItem, groupId, userId);
-
+      console.log(detailItem);
+      const dataSort = await sortResult(
+        detailItem,
+        null,
+        replyToken,
+        round.round,
+        groupId
+      );
+      const data1 = [];
+      for (let i of dataSort[2]) {
+        let res = "";
+        for (let n of i.data) {
+          res += `ขา ${n.ka === "k0" ? "จ" : n.ka.charAt(1)}${
+            n.fight === "k0" ? "" : n.fight.charAt(1)
+          }=${n.unit}บ.`;
+        }
+        console.log();
+        const userLine = await BotEvent.getProfileInGroupById(
+          groupId,
+          i.User.uuid_line
+        );
+        const data = {
+          name:
+            userLine?.data === undefined
+              ? "ไม่พบผู้ใช้"
+              : userLine.data.displayName,
+          unit: res,
+        };
+        data1.push(data);
+      }
+      console.log(JSON.stringify(data1, null, 2));
+      return;
       const outputData = result.map((entry) => {
         const playData = entry.play.reduce((acc, playEntry) => {
           if (playEntry.unit !== 0) {
@@ -680,7 +711,8 @@ const closeRound = async (replyToken, userId, groupId) => {
         };
       });
       const dataMsg = await showAll(outputData, groupId, isRound.round);
-
+      console.log(dataMsg);
+      return;
       await BotEvent.replyMessage(replyToken, [
         // flex.startRound("ปิดรอบเรียบร้อย"),
         {
@@ -925,17 +957,19 @@ const sortResult = async (res, results, replyToken, roundNo, groupId) => {
       totalIncome: 0,
     };
   });
-
-  for (const userItem of finalResult) {
-    for (const kaItem of userItem.data) {
-      const result = await calculateResult(kaItem, results);
-      kaItem.income = result.income;
-      kaItem.balance = result.total;
-      kaItem.totalBroken = result.broken;
-      kaItem.net = result.net;
-      kaItem.status = result.status;
+  if (results !== null) {
+    for (const userItem of finalResult) {
+      for (const kaItem of userItem.data) {
+        const result = await calculateResult(kaItem, results);
+        kaItem.income = result.income;
+        kaItem.balance = result.total;
+        kaItem.totalBroken = result.broken;
+        kaItem.net = result.net;
+        kaItem.status = result.status;
+      }
     }
   }
+
   finalResult.forEach((obj) => {
     obj.totalUnit = obj.data.reduce((sum, playItem) => sum + playItem.unit, 0);
     obj.totalBroken = obj.data.reduce(
