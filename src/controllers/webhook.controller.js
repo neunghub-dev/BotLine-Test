@@ -10,8 +10,6 @@ const flex = require("../constants/flexMesaage");
 // KeyWord Cancel
 // KeyWord OpenRound
 // KeyWord CloseRound
-let results = [];
-let mssageTotal = "";
 
 const hookMessageLine = async (req, res) => {
   try {
@@ -23,10 +21,6 @@ const hookMessageLine = async (req, res) => {
         const replyToken = req.body.events[0].replyToken;
         const userId = req.body.events[0].source.userId;
         const groupId = req.body.events[0].source.groupId;
-
-        //check ว่าเปิดรอบไหม
-        //update เงิน
-        //บันทึกข้อมูล
         try {
           // KeyWord Check Credit
           if (
@@ -37,9 +31,7 @@ const hookMessageLine = async (req, res) => {
             message === "Check"
           ) {
             checkCredit(replyToken, userId, groupId);
-            // KeyWord Cancel
           } else if (message === "x" || message === "X") {
-            // const round = await roundService.getCountRoundInProgress(groupId);
             cancel(replyToken, userId, groupId);
           } else {
             playPok(replyToken, userId, groupId, message);
@@ -78,10 +70,6 @@ const hookMessageLine = async (req, res) => {
             await confirmRound(replyToken, userId, groupId);
           } else if (message === "show") {
             const getRound = await roundService.getRound(groupId);
-            console.log(getRound.round);
-            // const json = JSON.stringify(getRound);
-            // const roundItem = JSON.parse(json);
-            // console.log(roundItem[0].round);
           }
         }
       }
@@ -127,158 +115,7 @@ const checkPok = (data) => {
     }
   }
 };
-const calculate = async (res, detail, groupId, replyToken, roundss) => {
-  console.log(roundss);
-  const transformedData = res.map((item) => ({
-    name: item.name,
-    number: item.number,
-    convertNumber: item.convertNumber,
-    isLeader: item.name === "k0",
-    status: "",
-    isPok: checkPok(item),
-  }));
 
-  console.log(transformedData);
-
-  let isWinnerExists = false;
-  //เช็คผลของแต่ละขา
-  for (const item of transformedData) {
-    if (!item.isLeader) {
-      if (
-        parseFloat(item.number.slice(1)) >
-        parseFloat(transformedData[0].number.split("s")[1].slice(1))
-      ) {
-        item.status = "winner";
-      } else if (
-        parseFloat(item.number.slice(1)) ===
-        parseFloat(transformedData[0].number.split("s")[1].slice(1))
-      ) {
-        item.status = "draw";
-      } else {
-        item.status = "loser";
-      }
-    } else {
-      continue;
-    }
-  }
-
-  console.log(transformedData);
-
-  results = await convertArray(detail, groupId, replyToken);
-  console.log(results);
-  // transformedData.forEach((e) => {
-  //   results.forEach((item) => {
-  //     item.play.forEach((play) => {
-  //       if (e.name === play.name) {
-  //         if (e.status === "winner") {
-  //           if (e.isPok === true) {
-  //             if (play.isDeduction) {
-  //               play.balance = play.unit * 2 * 2;
-  //               item.total += play.balance;
-  //               play.net += play.unit * 2;
-  //             } else {
-  //               play.balance = play.unit * 2;
-  //               item.total += play.balance;
-  //               play.net += play.unit;
-  //             }
-  //           } else {
-  //             if (play.isDeduction) {
-  //               play.balance = play.unit + play.unit * 2;
-  //               item.total += play.balance;
-  //               play.net += play.unit;
-  //             } else {
-  //               play.balance = play.unit * 2;
-  //               item.total += play.balance;
-  //               play.net += play.unit;
-  //             }
-  //           }
-  //         } else if (e.status === "loser") {
-  //           if (transformedData[0].isPok === true) {
-  //             if (play.isDeduction) {
-  //               play.broken += play.unit * 2;
-  //               play.balance = 0;
-  //               item.total += play.balance;
-  //               item.totalBroken += play.broken;
-  //             } else {
-  //               play.broken += play.unit * 1;
-  //               play.balance = 0;
-  //               item.total += play.balance;
-  //               item.totalBroken += play.broken;
-  //             }
-  //           } else {
-  //             if (play.isDeduction) {
-  //               play.broken += play.unit * 1;
-  //               play.balance = play.unit * 1;
-  //               item.total += play.balance;
-  //               item.totalBroken += play.broken;
-  //             } else {
-  //               play.balance = 0;
-  //               play.broken += 0;
-  //               item.total += play.balance;
-  //               item.totalBroken += play.broken;
-  //             }
-  //           }
-  //         } else {
-  //           if (play.isDeduction) {
-  //             play.balance = play.unit * 2;
-  //             item.total += play.balance;
-  //           } else {
-  //             play.balance = play.unit * 1;
-  //             item.total += play.balance;
-  //           }
-  //         }
-  //       }
-  //     });
-  //   });
-  // });
-  // console.log(JSON.stringify(results, null, 2));
-
-  let msgStringRes = [];
-
-  // }
-  const dataMsg = {
-    name: "",
-    balance: "",
-    total: "",
-  };
-  let msgString = "";
-  msgString += `✅ สรุปยอดรอบที่ ${roundss}\n`;
-
-  results.forEach((obj) => {
-    obj.totalBalance = obj.play.reduce(
-      (sum, playItem) => sum + playItem.balance,
-      0
-    );
-  });
-  results.forEach((obj) => {
-    obj.totalNet = obj.play.reduce((sum, playItem) => sum + playItem.net, 0);
-  });
-  if (results.length !== 0) {
-    for (const item of results) {
-      const userLine = await BotEvent.getProfileInGroupById(groupId, item.uuid);
-      const credit = await usersService.getCreadit(item.id);
-      msgString += `คุณ${
-        userLine?.data === undefined ? "ไม่พบผู้ใช้" : userLine.data.displayName
-      }   `;
-      msgString += `${
-        item.totalNet - item.totalBroken < 0
-          ? `${item.totalNet - item.totalBroken}`
-          : `+${item.totalNet - item.totalBroken}`
-      } = ${credit.credit + item.total}\n`;
-      msgString += "------------\n";
-    }
-  } else {
-    msgString = "ไม่มีผู้เล่นในรอบนี้";
-  }
-  console.log(msgString);
-
-  return msgString;
-
-  // await BotEvent.replyMessage(replyToken, {
-  //   type: "text",
-  //   text: msgStringRes,
-  // });
-};
 const convertPokNumber = (data) => {
   //pok 9*2  = 999
   //pok 9*1 = 998
@@ -625,7 +462,6 @@ const openRound = async (replyToken, userId, groupId) => {
 
 const closeRound = async (replyToken, userId, groupId) => {
   const isRound = await roundService.getRoundIdinProgress(groupId);
-
   if (isRound === null) {
     const data = {
       message: "ไม่มีรอบที่กำลังเปิดอยู่",
@@ -644,11 +480,11 @@ const closeRound = async (replyToken, userId, groupId) => {
     const date = new Date();
     const formattedDate = date.toISOString().split("T")[0].toString();
     const round = await roundService.getRoundIdinProgress(groupId);
-    // const json = JSON.stringify(round);
-    // const roundItem = JSON.parse(json);
-    // const updateRound = await roundService.closeRound(roundItem.id, groupId);
+    const json = JSON.stringify(round);
+    const roundItem = JSON.parse(json);
+    const updateRound = await roundService.closeRound(roundItem.id, groupId);
 
-    if (true) {
+    if (updateRound) {
       const detail = await roundService.getAllRoundDetailByRoundId(round.id);
       const json = JSON.stringify(detail);
       const detailItem = JSON.parse(json);
@@ -682,49 +518,72 @@ const closeRound = async (replyToken, userId, groupId) => {
         };
         data1.push(data);
       }
-      console.log(JSON.stringify(data1, null, 2));
-      return;
-      const outputData = result.map((entry) => {
-        const playData = entry.play.reduce((acc, playEntry) => {
-          if (playEntry.unit !== 0) {
-            const existingPlayEntry = acc.find(
-              (p) => p.name === playEntry.name
-            );
 
-            if (existingPlayEntry) {
-              existingPlayEntry.unit += playEntry.unit;
-            } else {
-              acc.push({
-                name: playEntry.name,
-                unit: playEntry.unit,
-              });
-            }
-          }
-
-          return acc;
-        }, []);
-
-        return {
-          id: entry.id,
-          uuid: entry.uuid,
-          play: playData,
+      const showData = chunkArray(data1, 25);
+      const allData = [];
+      for (let i of showData) {
+        const result = [];
+        for (let j of i) {
+          result.push({
+            type: "box",
+            layout: "baseline",
+            spacing: "xs",
+            margin: "xs",
+            contents: [
+              {
+                type: "text",
+                size: "xxs",
+                text: j.name,
+                contents: [],
+              },
+              {
+                type: "text",
+                size: "xxs",
+                wrap: true,
+                text: j.unit.toString(),
+                align: "end",
+                contents: [],
+              },
+            ],
+          });
+        }
+        const data = {
+          type: "bubble",
+          direction: "ltr",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: `สรุปการเดิมพันรอบที่ ${isRound.round}`,
+                align: "center",
+                contents: [],
+              },
+            ],
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "none",
+            margin: "none",
+            contents: result,
+          },
         };
-      });
-      const dataMsg = await showAll(outputData, groupId, isRound.round);
-      console.log(dataMsg);
-      return;
-      await BotEvent.replyMessage(replyToken, [
-        // flex.startRound("ปิดรอบเรียบร้อย"),
-        {
-          type: "image",
-          originalContentUrl: "https://hook.nuenghub-soft.online/img/w11.png",
-          previewImageUrl: "https://hook.nuenghub-soft.online/img/w11.png",
-        },
-        {
-          type: "text",
-          text: dataMsg,
-        },
-      ]);
+        allData.push(data);
+      }
+      await BotEvent.showResultClose(
+        replyToken,
+        [
+          {
+            type: "image",
+            originalContentUrl: "https://hook.nuenghub-soft.online/img/w11.png",
+            previewImageUrl: "https://hook.nuenghub-soft.online/img/w11.png",
+          },
+          allData,
+        ],
+        1
+      );
     }
     return;
   }
@@ -732,7 +591,6 @@ const closeRound = async (replyToken, userId, groupId) => {
 
 const cancelRound = async (replyToken, userId, groupId) => {
   const isRound = await roundService.getRoundIdinProgress(groupId);
-  const getRound = await roundService.getRound(groupId);
 
   if (isRound === null) {
     const data = {
@@ -1003,7 +861,7 @@ const sortResult = async (res, results, replyToken, roundNo, groupId) => {
     };
     data1.push(data);
   }
-  console.log(JSON.stringify(finalResult, null, 2));
+  // console.log(JSON.stringify(finalResult, null, 2));
 
   // for (let i = 0; i < 30; i++) {
   //   data1.push({
@@ -1196,7 +1054,6 @@ const calculateResult = async (data, result) => {
 };
 const confirmRound = async (replyToken, userId, groupId) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
-  // round.k0
   const result = [
     `s${round.k0}`,
     round.k1,
@@ -1216,7 +1073,7 @@ const confirmRound = async (replyToken, userId, groupId) => {
     };
     transformedSequence.push(data);
   }
-  // console.log(transformedSequence);
+
   const transformedData = transformedSequence.map((item) => ({
     name: item.name,
     number: item.number,
@@ -1246,8 +1103,6 @@ const confirmRound = async (replyToken, userId, groupId) => {
       continue;
     }
   }
-  console.log(transformedData);
-  // const transformedSequence = result.map((number, index) => ({
 
   const detail = await roundService.getAllRoundDetailByRoundId(round.id);
   const json = JSON.stringify(detail);
@@ -1262,8 +1117,6 @@ const confirmRound = async (replyToken, userId, groupId) => {
     groupId
   );
 
-  // console.log(JSON.stringify(dataSort[2], null, 2));
-  // return;
   if (dataSort[2].length !== 0) {
     let sumTotal = 0;
     let sumBroken = 0;
@@ -1285,8 +1138,6 @@ const confirmRound = async (replyToken, userId, groupId) => {
     const close = await roundService.closeStatus(round.id, groupId);
     const total = await roundService.updateTotal(round.id, sumUnit, sumBroken);
     if (close && total) {
-      results = [];
-      messageTotal = "";
       BotEvent.replyMessage(replyToken, {
         type: "text",
         text: "อัพเดทยอดเรียบร้อย 🎊",
@@ -1298,57 +1149,8 @@ const confirmRound = async (replyToken, userId, groupId) => {
       text: "อัพเดทยอดเรียบร้อย 🎊",
     });
     await roundService.closeStatus(round.id, groupId);
-    results = [];
-    messageTotal = "";
   }
-
   return;
-  let sumTotal = 0;
-  let sumBroken = 0;
-  let sumUnit = 0;
-  let diff = 0;
-  const filteredPlayArray = results.map((item) => ({
-    ...item,
-    play: item.play.filter((playItem) => playItem.unit !== 0),
-  }));
-
-  filteredPlayArray.forEach((item) => {
-    item.play.forEach((play) => {
-      if (play.isDeduction) {
-        sumUnit += play.unit * 2;
-      } else {
-        sumUnit += play.unit;
-      }
-    });
-    sumTotal += item.total;
-    sumBroken += item.totalBroken;
-  });
-
-  if (results.length !== 0) {
-    for (const item of results) {
-      const user = await usersService.getCreadit(item.id);
-      const newCredit = user.credit + item.total;
-      await usersService.addCredit(newCredit, item.id);
-    }
-    const close = await roundService.closeStatus(round.id, groupId);
-    const total = await roundService.updateTotal(round.id, sumUnit, sumBroken);
-    if (close && total) {
-      results = [];
-      messageTotal = "";
-      BotEvent.replyMessage(replyToken, {
-        type: "text",
-        text: "อัพเดทยอดเรียบร้อย 🎊",
-      });
-    }
-  } else {
-    BotEvent.replyMessage(replyToken, {
-      type: "text",
-      text: "อัพเดทยอดเรียบร้อย 🎊",
-    });
-    await roundService.closeStatus(round.id, groupId);
-    results = [];
-    messageTotal = "";
-  }
 };
 
 const cancel = async (replyToken, userId, groupId) => {
@@ -1420,24 +1222,19 @@ const playPok = async (replyToken, userId, groupId, message) => {
   try {
     const searchRegex = /[=\/]/g; // This regex matches '=' or '/' globally
     const matches = message.match(searchRegex) ?? [];
-    console.log(matches);
+
     if (matches.length > 0) {
       const round = await roundService.getCountRoundInProgress(groupId);
-      console.log(`round ${round}`);
       const isRound = await roundService.getRoundIdinProgress(groupId);
       if (isRound) {
         const id = await usersService.getIdByUUid(userId);
         const resultArray = message.split("\n");
-
         const resultObjects = [];
-        console.log(resultArray);
 
         let total = 0;
         //ยอดที่รับมา
         resultArray.forEach((item) => {
           const [, key, value] = item.match(/(.+)\/(\d+)$/);
-          console.log(key);
-          console.log(value);
           let obj = {};
           if (key.length === 1) {
             if (
@@ -1458,13 +1255,47 @@ const playPok = async (replyToken, userId, groupId, message) => {
           } else if (key.length === 2) {
             let array = Array.from(key);
             console.log(array);
+            let checkKa = false;
+            let checkFight = false;
+            if (
+              array[0] === "จ" ||
+              array[0] === "1" ||
+              array[0] === "2" ||
+              array[0] === "3" ||
+              array[0] === "4" ||
+              array[0] === "5" ||
+              array[0] === "6"
+            ) {
+              checkKa = true;
+            } else {
+              checkKa = false;
+            }
+            if (
+              array[1] === "จ" ||
+              array[1] === "1" ||
+              array[1] === "2" ||
+              array[1] === "3" ||
+              array[1] === "4" ||
+              array[1] === "5" ||
+              array[1] === "6"
+            ) {
+              checkFight = true;
+            } else {
+              checkFight = false;
+            }
 
-            obj = {
-              name: "k" + array[0] === "kจ" ? "k0" : "k" + array[0],
-              unit: parseInt(value, 10),
-              fight: "k" + array[1],
-            };
-            resultObjects.push(obj);
+            if (
+              checkKa &&
+              checkFight &&
+              array[0].toString() !== array[1].toString()
+            ) {
+              obj = {
+                name: "k" + array[0] === "kจ" ? "k0" : "k" + array[0],
+                unit: parseInt(value, 10),
+                fight: "k" + array[1],
+              };
+              resultObjects.push(obj);
+            }
             // if (key.split("s")[1] === "5" || key.split("s")[1] === "9") {
             // }
           }
@@ -1533,32 +1364,78 @@ const playPok = async (replyToken, userId, groupId, message) => {
             });
             return;
           }
-          // const oldData = [
-          //   { name: "k0", unit: 0 },
-          //   { name: "k1", unit: 0 },
-          //   { name: "k2", unit: 0 },
-          //   { name: "k3", unit: 0 },
-          //   { name: "k4", unit: 0 },
-          //   { name: "k5", unit: 0 },
-          //   { name: "k6", unit: 0 },
-          // ];
-          // const tempOldData = [
-          //   { name: "k1", unit: 0, isAdd: false },
-          //   { name: "k2", unit: 0, isAdd: false },
-          //   { name: "k3", unit: 0, isAdd: false },
-          //   { name: "k4", unit: 0, isAdd: false },
-          //   { name: "k5", unit: 0, isAdd: false },
-          //   { name: "k6", unit: 0, isAdd: false },
-          // ];
-          // const tempData =
-          //   await roundService.getAllRoundDetailByRoundIdAndUserId(
-          //     isRound.id,
-          //     id.id
-          //   );
+
+          const tempData =
+            await roundService.getAllRoundDetailByRoundIdAndUserId(
+              isRound.id,
+              id.id
+            );
           // // convert tempData to json
-          // const json = JSON.stringify(tempData);
-          // const detailItem = JSON.parse(json);
-          // console.log(detailItem);
+          const json = JSON.stringify(tempData);
+          const detailItem = JSON.parse(json);
+          console.log("----------");
+          console.log(detailItem);
+          console.log("----------");
+          let checkKa2000 = false;
+          console.log(checkKa2000);
+          const oldData = [
+            { name: "k0", unit: 0 },
+            { name: "k1", unit: 0 },
+            { name: "k2", unit: 0 },
+            { name: "k3", unit: 0 },
+            { name: "k4", unit: 0 },
+            { name: "k5", unit: 0 },
+            { name: "k6", unit: 0 },
+          ];
+          if (detailItem.length !== 0) {
+            const dataSort = await sortResult(
+              detailItem,
+              null,
+              replyToken,
+              isRound.round,
+              groupId
+            );
+            // console.log("///----------");
+            // console.log(JSON.stringify(dataSort[2], null, 2));
+            // console.log("----------///");
+
+            if (dataSort[2].length !== 0) {
+              dataSort[2].forEach((item1) => {
+                item1.data.forEach((item2) => {
+                  console.log(item2);
+                  oldData.forEach((item3) => {
+                    if (item2.ka === item3.name) {
+                      item3.unit += item2.unit;
+                    }
+                  });
+                });
+              });
+              sumData.forEach((item4) => {
+                oldData.forEach((item5) => {
+                  if (item4.name === item5.name) {
+                    item5.unit += item4.unit;
+                  }
+                });
+              });
+            }
+            console.log(oldData);
+            console.log("End");
+          }
+
+          oldData.forEach((item) => {
+            if (item.unit > 2000) {
+              checkKa2000 = true;
+            }
+          });
+          console.log("+++----------");
+          console.log(checkKa2000);
+          // console.log(check2000Data.length);
+          console.log("----------+++");
+          // if (check2000Data.length !== 0) {
+          //   checkKa2000 = true;
+          // } else {
+          //   checkKa2000 = false;
+          // }
           // if (detailItem.length !== 0) {
           //   oldData.forEach((item2) => {
           //     detailItem.forEach((item) => {
@@ -1579,7 +1456,7 @@ const playPok = async (replyToken, userId, groupId, message) => {
           // let tempTotal = 0;
           // //ยอดเก่า <--
           // // check ยอดรวมกันถึง 2000 บาทไหม -->
-          // let check2000 = false;
+
           // if (resultObjects.length > 0) {
           //   oldData.forEach((item1, index1) => {
           //     const matchingItem = resultObjects.find(
@@ -1595,135 +1472,26 @@ const playPok = async (replyToken, userId, groupId, message) => {
           //   });
           // }
 
-          // if (check2000) {
-          //   BotEvent.replyMessage(replyToken, {
-          //     type: "text",
-          //     text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
-          //   });
-          //   check2000 = false;
-          //   return;
-          // }
+          if (checkKa2000) {
+            BotEvent.replyMessage(replyToken, {
+              type: "text",
+              text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
+            });
+            checkKa2000 = false;
+            return;
+          }
           // check ยอดรวมกันถึง 2000 บาทไหม <--
 
           //
 
-          const data = [
-            {
-              name: "k0",
-              unitTotal: 0,
-              fight: [
-                {
-                  name: "k1",
-                  unit: 0,
-                },
-                {
-                  name: "k2",
-                  unit: 0,
-                },
-                {
-                  name: "k3",
-                  unit: 0,
-                },
-                {
-                  name: "k4",
-                  unit: 0,
-                },
-                {
-                  name: "k5",
-                  unit: 0,
-                },
-                {
-                  name: "k6",
-                  unit: 0,
-                },
-              ],
-            },
-            // {
-            //   name: "k1",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: false,
-            // },
-            // {
-            //   name: "k2",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: false,
-            // },
-            // {
-            //   name: "k3",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: false,
-            // },
-            // {
-            //   name: "k4",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: false,
-            // },
-            // {
-            //   name: "k5",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: false,
-            // },
-            // {
-            //   name: "k6",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: false,
-            // },
-            // {
-            //   name: "k1",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: true,
-            // },
-            // {
-            //   name: "k2",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: true,
-            // },
-            // {
-            //   name: "k3",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: true,
-            // },
-            // {
-            //   name: "k4",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: true,
-            // },
-            // {
-            //   name: "k5",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: true,
-            // },
-            // {
-            //   name: "k6",
-            //   unit: 0,
-            //   balance: 0,
-            //   isDeduction: true,
-            // },
-          ];
-          // const allUnitsNotZero = oldData.every((item) => item.unit === 0);
-
-          //  รวมยอกทั้งหมด
           let msgString = "";
-          if (true) {
+          if (!checkKa2000) {
             const user = await BotEvent.getProfileInGroupById(groupId, userId);
+            console.log(user.data.displayName);
             msgString += `👤 คุณ ${user.data.displayName}\n`;
             msgString += "-------------------\n";
             outputData.map((item) => {
               total += item.unit;
-              // msgString += `✅ ขา ${item.name.charAt(1)} = ${
-              //   item.unit
-              // } บ.\n`;
             });
             //เช็คยอด
             const val = await usersService.getCreaditByuserId(userId);
@@ -1732,26 +1500,9 @@ const playPok = async (replyToken, userId, groupId, message) => {
             if (val.credit >= total * 2) {
               total = total * 2;
               isDeduction = true;
-              // resultObjects.map((item1) => {
-              //   data.forEach((item2) => {
-              //     if (item1.name === item2.name && item2.isDeduction === true) {
-              //       item2.unit += item1.unit;
-              //     }
-              //   });
-              // });
             } else if (val.credit >= total) {
               total = total;
               isDeduction = false;
-              // resultObjects.map((item1) => {
-              //   data.forEach((item2) => {
-              //     if (
-              //       item1.name === item2.name &&
-              //       item2.isDeduction === false
-              //     ) {
-              //       item2.unit += item1.unit;
-              //     }
-              //   });
-              // });
             } else {
               isCheck = true;
               isDeduction = false;
@@ -1762,31 +1513,8 @@ const playPok = async (replyToken, userId, groupId, message) => {
               return;
             }
 
-            // return;
-            //เหลือ Update Credit
-
-            //save RoundDetail
-
-            // tempOldData.forEach((item) => {
-            //   data.forEach((item2) => {
-            //     if (item.name === item2.name) {
-            //       if (item.unit !== 0 && item2.unit !== 0) {
-            //         item.unit = item2.unit;
-            //         item.isAdd = true;
-            //       } else {
-            //         item.unit = item2.unit;
-            //       }
-            //     }
-            //   });
-            // });
-            // const filterTempOldData = tempOldData.filter(
-            //   (item) => item.unit !== 0
-            // );
-            // console.log(filterTempOldData);
-            // return;
             if (!isCheck) {
               if (id) {
-                // const saveData = data.filter((item) => item.unit !== 0);
                 const roundDetailData = [];
                 outputData.forEach((item) => {
                   const obj = {
@@ -1800,7 +1528,7 @@ const playPok = async (replyToken, userId, groupId, message) => {
                   };
                   roundDetailData.push(obj);
                 });
-                console.log(roundDetailData);
+
                 const addRoundDetail = await roundService.createRoundDetail(
                   roundDetailData
                 );

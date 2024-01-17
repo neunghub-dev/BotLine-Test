@@ -20,6 +20,9 @@ const showResult = async (replyToken, data, round) => {
     flex.showResultAll(data[1]),
   ]);
 };
+const showResultClose = async (replyToken, data, round) => {
+  await replyMessage(replyToken, [data[0], flex.showResultAll(data[1])]);
+};
 const replyMessage = (replyToken, message) => {
   console.log(message);
   const data = [];
@@ -73,6 +76,7 @@ const getProfileInGroupById = async (groupId, userId) => {
   }
 };
 module.exports = {
+  showResultClose,
   getProfileInGroupById,
   getCreadit,
   openRound,

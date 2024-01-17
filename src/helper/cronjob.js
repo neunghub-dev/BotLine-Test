@@ -5,7 +5,6 @@ const clearRound = () => {
     "0 6 * * *",
     async () => {
       const groupAllId = await roundService.getAllGroupIdLine();
-      //log json
       const json = JSON.stringify(groupAllId);
       const data = JSON.parse(json);
       const round = {
@@ -22,6 +21,11 @@ const clearRound = () => {
         await roundService.createRound(round);
       }
       console.log("Clear Round");
+
+      const getAllRound = await roundService.DeleteRoundDetailDateBefore();
+      if (getAllRound) {
+        console.log("Clear All Round Success");
+      }
     },
     {
       scheduled: true,

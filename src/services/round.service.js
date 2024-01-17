@@ -13,7 +13,18 @@ const getAllGroupIdLine = async () => {
 
   return groupAllId;
 };
-
+const DeleteRoundDetailDateBefore = async () => {
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const round = await roundDetail.destroy({
+    where: {
+      createdAt: {
+        [Op.lt]: threeDaysAgo,
+      },
+    },
+  });
+  return round;
+};
 const createRound = async (data) => {
   const createRound = await rounds.create(data);
   return createRound;
@@ -263,6 +274,7 @@ module.exports = {
   closeStatus,
   getAllRoundDetailByRoundIdAndUserId,
   getCloseRoundAndinProgress,
+  DeleteRoundDetailDateBefore,
   updateRoundDetail,
   updateKa,
   updateTotal,
