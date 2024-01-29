@@ -4,7 +4,7 @@ const usersService = require("../services/users.service");
 const roundService = require("../services/round.service");
 const transactionService = require("../services/transaction.service");
 const flex = require("../constants/flexMesaage");
-
+const UserAdmin = require("../services/users_admin.service");
 // ctrl + f go to KeyWord Function
 // KeyWord Check Credit
 // KeyWord Cancel
@@ -21,6 +21,8 @@ const hookMessageLine = async (req, res) => {
         const replyToken = req.body.events[0].replyToken;
         const userId = req.body.events[0].source.userId;
         const groupId = req.body.events[0].source.groupId;
+        const checkUser = await UserAdmin.checkUser(userId);
+
         try {
           // KeyWord Check Credit
           if (
@@ -40,19 +42,7 @@ const hookMessageLine = async (req, res) => {
           console.log(error);
           return;
         }
-        if (
-          userId === "Uab6dc3240000f41c68d86744421b375d" ||
-          userId === "U33113ebe5b40a3a017da7dbe921c2b0c" ||
-          userId === "U881888a45c276e2c66039d422326068d" ||
-          userId === "Ub6834bd1c305b10498e15c335ca567ee" ||
-          userId === "Ue43f8f53001fecf7a0fbf027ac43b215" ||
-          userId === "Ubca0cc846191b893283be4082cefcf76" ||
-          userId === "Uab6dc3240000f41c68d86744421b375d" ||
-          userId === "Ub6834bd1c305b10498e15c335ca567ee" ||
-          userId === "U6f607e943211560f9f435f240272e4ae" ||
-          userId === "U626d55bed62ca50956f8094b17994f49" ||
-          userId === "U45b8041a690866573e469b8d3863377e"
-        ) {
+        if (checkUser) {
           // OpenRound
 
           if (message === "o" || message === "O") {
@@ -500,7 +490,7 @@ const closeRound = async (replyToken, userId, groupId) => {
       for (let i of dataSort[2]) {
         let res = "";
         for (let n of i.data) {
-          res += `ขา ${n.ka === "k0" ? "จ" : n.ka.charAt(1)}${
+          res += `ขา${n.ka === "k0" ? "จ" : n.ka.charAt(1)}${
             n.fight === "k0" ? "" : n.fight.charAt(1)
           }=${n.unit}บ.`;
         }
@@ -718,6 +708,7 @@ const sentResult = async (replyToken, userId, groupId, message) => {
         round.round,
         groupId
       );
+      console.log(JSON.stringify(dataSort, null, 2));
       await BotEvent.showResult(replyToken, dataSort, round.round);
     }
 
@@ -951,9 +942,13 @@ const calculateResult = async (data, result) => {
   };
   const ka = result.find((item) => item.name === data.ka);
   const fg = result.find((item) => item.name === data.fight);
-  dataPlayer.kaItem = ka.convertNumber;
-  dataPlayer.fightItem = fg.convertNumber;
-
+  dataPlayer.kaItem = ka.isLeader
+    ? parseFloat(ka.number.split("s")[1].slice(1))
+    : parseFloat(ka.number.slice(1));
+  dataPlayer.fightItem = fg.isLeader
+    ? parseFloat(fg.number.split("s")[1].slice(1))
+    : parseFloat(fg.number.slice(1));
+  console.log(dataPlayer);
   if (dataPlayer.kaItem > dataPlayer.fightItem) {
     dataPlayer.status = "winner";
     dataPlayer.isPok = await checkPok(ka);
@@ -967,27 +962,31 @@ const calculateResult = async (data, result) => {
     if (dataPlayer.status === "winner") {
       if (dataPlayer.isPok === true) {
         if (dataPlayer.isDeduction) {
-          dataPlayer.total = dataPlayer.unit * 2 * 2;
+          console.log(1);
+          dataPlayer.total = dataPlayer.unit * 2;
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit * 2;
-          dataPlayer.income = dataPlayer.unit * 2 * 2;
+          dataPlayer.income = dataPlayer.unit * 2;
         } else {
-          dataPlayer.total = dataPlayer.unit * 2;
+          console.log(2);
+          dataPlayer.total = dataPlayer.unit;
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
-          dataPlayer.income = dataPlayer.unit * 2;
+          dataPlayer.income = dataPlayer.unit;
         }
       } else {
         if (dataPlayer.isDeduction) {
-          dataPlayer.total = dataPlayer.unit + dataPlayer.unit * 2;
+          console.log(3);
+          dataPlayer.total = dataPlayer.unit;
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit;
-          dataPlayer.income = dataPlayer.unit * 2;
+          dataPlayer.income = dataPlayer.unit;
         } else {
-          dataPlayer.total = dataPlayer.unit * 2;
+          console.log(4);
+          dataPlayer.total = dataPlayer.unit;
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
-          dataPlayer.income = dataPlayer.unit * 2;
+          dataPlayer.income = dataPlayer.unit;
         }
       }
     }
@@ -995,27 +994,27 @@ const calculateResult = async (data, result) => {
     if (dataPlayer.status === "winner") {
       if (dataPlayer.isPok === true) {
         if (dataPlayer.isDeduction) {
-          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 2 * 90) / 100);
+          console.log(5);
+          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 90) / 100);
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit * 2;
-          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 2 * 90) / 100);
+          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 90) / 100);
         } else {
-          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          console.log(6);
+          dataPlayer.total = Math.floor((dataPlayer.unit * 90) / 100);
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
-          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.income = Math.floor((dataPlayer.unit * 90) / 100);
         }
       } else {
         if (dataPlayer.isDeduction) {
-          dataPlayer.total = Math.floor(
-            (dataPlayer.unit + dataPlayer.unit * 2 * 90) / 100
-          );
+          console.log(7);
+          dataPlayer.total = Math.floor((dataPlayer.unit * 90) / 100);
           dataPlayer.deduction = dataPlayer.unit * 2 - dataPlayer.unit;
           dataPlayer.net += dataPlayer.unit;
-          dataPlayer.income = Math.floor(
-            (dataPlayer.unit + dataPlayer.unit * 2 * 90) / 100
-          );
+          dataPlayer.income = Math.floor((dataPlayer.unit * 90) / 100);
         } else {
+          console.log(8);
           dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 90) / 100);
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
@@ -1063,7 +1062,10 @@ const confirmRound = async (replyToken, userId, groupId) => {
     round.k5,
     round.k6,
   ];
-  console.log(result);
+  // const countOfNull = result.filter((value) => value === null).length;
+  // if (countOfNull === 0) {
+
+  // }
   const transformedSequence = [];
   for (let n in result) {
     const data = {
@@ -1246,7 +1248,7 @@ const playPok = async (replyToken, userId, groupId, message) => {
               key === "6"
             ) {
               obj = {
-                name: "k" + key,
+                ka: "k" + key,
                 unit: parseInt(value, 10),
                 fight: "k0",
               };
@@ -1290,7 +1292,7 @@ const playPok = async (replyToken, userId, groupId, message) => {
               array[0].toString() !== array[1].toString()
             ) {
               obj = {
-                name: "k" + array[0] === "kจ" ? "k0" : "k" + array[0],
+                ka: "k" + array[0] === "kจ" ? "k0" : "k" + array[0],
                 unit: parseInt(value, 10),
                 fight: "k" + array[1],
               };
@@ -1305,40 +1307,50 @@ const playPok = async (replyToken, userId, groupId, message) => {
 
         // Iterate over the input data and aggregate values
         resultObjects.forEach((entry) => {
-          const key = entry.name + "-" + entry.fight;
+          const key = entry.ka + "-" + entry.fight;
           if (resultMap.has(key)) {
             resultMap.get(key).unit += entry.unit;
           } else {
             resultMap.set(key, {
-              name: entry.name,
+              ka: entry.ka,
               unit: entry.unit,
               fight: entry.fight,
             });
           }
         });
-
         // Convert the map values back to an array
         const outputData = Array.from(resultMap.values());
 
         if (resultObjects.length !== 0) {
-          const sumData = [
-            { name: "k0", unit: 0 },
-            { name: "k1", unit: 0 },
-            { name: "k2", unit: 0 },
-            { name: "k3", unit: 0 },
-            { name: "k4", unit: 0 },
-            { name: "k5", unit: 0 },
-            { name: "k6", unit: 0 },
-          ];
+          const sumData = Object.values(
+            resultObjects.reduce((acc, { ka, unit, fight }) => {
+              const key = ka + fight;
+              acc[key] = acc[key] || { ka, fight, unit: 0 };
+              acc[key].unit += unit;
+              return acc;
+            }, {})
+          );
 
-          resultObjects.forEach((item1) => {
-            sumData.forEach((item2) => {
-              if (item1.name === item2.name) {
-                item2.unit += item1.unit;
-              }
-            });
-          });
-          console.log(sumData);
+          // console.log(sumData);
+          // return;
+          // const sumData = [
+          //   { name: "k1", fight: "k0", unit: 0 },
+          //   { name: "k2", fight: "k0",unit: 0 },
+          //   { name: "k3", fight: "k0",unit: 0 },
+          //   { name: "k4", fight: "k0",unit: 0 },
+          //   { name: "k5", fight: "k0",unit: 0 },
+          //   { name: "k6", fight: "k0",unit: 0 },
+          // ];
+
+          // resultObjects.forEach((item1) => {
+          //   sumData.forEach((item2) => {
+          //     if (item1.name === item2.name) {
+          //       item2.unit += item1.unit;
+          //     }
+          //   });
+          // });
+          // console.log(sumData);
+
           // return;
           const to2000 = sumData.filter((item) => item.unit > 2000).length;
           const noi50 = sumData.filter(
@@ -1373,20 +1385,19 @@ const playPok = async (replyToken, userId, groupId, message) => {
           // // convert tempData to json
           const json = JSON.stringify(tempData);
           const detailItem = JSON.parse(json);
-          console.log("----------");
-          console.log(detailItem);
-          console.log("----------");
+
           let checkKa2000 = false;
-          console.log(checkKa2000);
-          const oldData = [
-            { name: "k0", unit: 0 },
-            { name: "k1", unit: 0 },
-            { name: "k2", unit: 0 },
-            { name: "k3", unit: 0 },
-            { name: "k4", unit: 0 },
-            { name: "k5", unit: 0 },
-            { name: "k6", unit: 0 },
-          ];
+          let output = "";
+          // console.log(checkKa2000);
+          // const oldData = [
+          //   { name: "k0", unit: 0 },
+          //   { name: "k1", unit: 0 },
+          //   { name: "k2", unit: 0 },
+          //   { name: "k3", unit: 0 },
+          //   { name: "k4", unit: 0 },
+          //   { name: "k5", unit: 0 },
+          //   { name: "k6", unit: 0 },
+          // ];
           if (detailItem.length !== 0) {
             const dataSort = await sortResult(
               detailItem,
@@ -1395,82 +1406,30 @@ const playPok = async (replyToken, userId, groupId, message) => {
               isRound.round,
               groupId
             );
-            // console.log("///----------");
-            // console.log(JSON.stringify(dataSort[2], null, 2));
-            // console.log("----------///");
 
-            if (dataSort[2].length !== 0) {
-              dataSort[2].forEach((item1) => {
-                item1.data.forEach((item2) => {
-                  console.log(item2);
-                  oldData.forEach((item3) => {
-                    if (item2.ka === item3.name) {
-                      item3.unit += item2.unit;
-                    }
-                  });
-                });
-              });
-              sumData.forEach((item4) => {
-                oldData.forEach((item5) => {
-                  if (item4.name === item5.name) {
-                    item5.unit += item4.unit;
-                  }
-                });
-              });
-            }
-            console.log(oldData);
+            const combinedData = [...dataSort[2][0].data, ...sumData];
+
+            // Sum the unit values based on the combination of name and fight
+            output = Object.values(
+              combinedData.reduce((acc, { ka, fight, unit, name }) => {
+                const key = ka + fight;
+                acc[key] = acc[key] || { ka, fight, unit: 0 };
+                acc[key].unit += unit;
+                return acc;
+              }, {})
+            );
+
+            console.log(output);
+
+            output.forEach((item) => {
+              if (item.unit > 2000) {
+                checkKa2000 = true;
+              }
+            });
+
             console.log("End");
           }
-
-          oldData.forEach((item) => {
-            if (item.unit > 2000) {
-              checkKa2000 = true;
-            }
-          });
-          console.log("+++----------");
-          console.log(checkKa2000);
-          // console.log(check2000Data.length);
-          console.log("----------+++");
-          // if (check2000Data.length !== 0) {
-          //   checkKa2000 = true;
-          // } else {
-          //   checkKa2000 = false;
-          // }
-          // if (detailItem.length !== 0) {
-          //   oldData.forEach((item2) => {
-          //     detailItem.forEach((item) => {
-          //       if (item2.name === item.ka) {
-          //         parseInt((item2.unit += item.unit));
-          //       }
-          //     });
-          //   });
-          // }
-          // tempOldData.forEach((item2) => {
-          //   detailItem.forEach((item) => {
-          //     if (item2.name === item.ka) {
-          //       parseInt((item2.unit += item.unit));
-          //     }
-          //   });
-          // });
-
-          // let tempTotal = 0;
-          // //ยอดเก่า <--
-          // // check ยอดรวมกันถึง 2000 บาทไหม -->
-
-          // if (resultObjects.length > 0) {
-          //   oldData.forEach((item1, index1) => {
-          //     const matchingItem = resultObjects.find(
-          //       (item2) => item2.name === item1.name
-          //     );
-          //     let x = 0;
-          //     if (matchingItem) {
-          //       x = oldData[index1].unit += matchingItem.unit;
-          //       if (x > 2000) {
-          //         check2000 = true;
-          //       }
-          //     }
-          //   });
-          // }
+          // return;
 
           if (checkKa2000) {
             BotEvent.replyMessage(replyToken, {
@@ -1520,7 +1479,7 @@ const playPok = async (replyToken, userId, groupId, message) => {
                   const obj = {
                     roundId: isRound.id,
                     userId: id.id,
-                    ka: item.name,
+                    ka: item.ka,
                     fight: item.fight,
                     unit: parseInt(item.unit),
                     isCancel: false,
@@ -1537,16 +1496,16 @@ const playPok = async (replyToken, userId, groupId, message) => {
                   userId
                 );
 
-                const transactionData = {
-                  event: "play",
-                  unit: total,
-                  userId: parseInt(id.id),
-                  adminId: 2,
-                };
-                const createTransaction =
-                  transactionService.createTransaction(transactionData);
+                // const transactionData = {
+                //   event: "play",
+                //   unit: total,
+                //   userId: parseInt(id.id),
+                //   adminId: 2,
+                // };
+                // const createTransaction =
+                //   transactionService.createTransaction(transactionData);
 
-                if (updateCredit && createTransaction && addRoundDetail) {
+                if (updateCredit && addRoundDetail) {
                   roundDetailData.forEach((item) => {
                     let ka = "";
                     if (item.ka === "k0" && item.fight !== "k0") {
