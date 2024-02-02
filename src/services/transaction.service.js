@@ -27,7 +27,31 @@ const getWinLose = async (id) => {
   return tc;
 };
 
+const getTrasactionByRounndId = async (id) => {
+  const tc = await transaction.findAll({
+    where: {
+      isCancel: false,
+      roundId: id,
+    },
+  });
+  return tc;
+};
+
+//update cancel transaction
+const updateTransaction = async (id) => {
+  const tc = await transaction.update(
+    { isCancel: true },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  return tc;
+};
 module.exports = {
+  getTrasactionByRounndId,
+  updateTransaction,
   getWinLose,
   createTransaction,
   getAllTransaction,

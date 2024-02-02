@@ -61,12 +61,59 @@ const hookMessageLine = async (req, res) => {
           } else if (message === "cf" || message === "Cf" || message === "CF") {
             await confirmRound(replyToken, userId, groupId, token);
           } else if (message === "show") {
+            const isRound = await roundService.getRoundIdinProgress(groupId);
+            const detail = await roundService.getAllRoundDetailByRoundId(
+              isRound.id
+            );
+            const json = JSON.stringify(detail);
+            const detailItem = JSON.parse(json);
+            if (detailItem.length === 0) {
+              const destroy = await roundService.destroyRound(isRound.id);
+              if (destroy) {
+                const beforeRound = await roundService.getLastRound(groupId);
+                // const detail = await roundService.getAllRoundDetailByRoundId(
+                //   beforeRound.id
+                // );
+                const transaction =
+                  await transactionService.getTrasactionByRounndId(
+                    beforeRound.id
+                  );
+                transaction.forEach(async (item) => {
+                  const user = await usersService.getCreadit(item.userId);
+                  const newCredit =
+                    item.event === "win"
+                      ? user.credit - item.unit
+                      : user.credit + item.unit;
+                  await usersService.updateCreditById(newCredit, item.userId);
+                  await transactionService.updateTransaction(item.id);
+                });
+                // step
+                //open beforeRound inprogress
+                const updateRound = await roundService.updateRoundToInprogress(
+                  beforeRound.id
+                );
+                if (updateRound) {
+                  await BotEvent.replyMessage(
+                    replyToken,
+                    {
+                      type: "text",
+                      text: `ยกเลิกรอบที่ ${
+                        isRound.round
+                      } เรียบร้อย ❌\nกรุณาใส่ผลรอบที่ ${
+                        isRound.round - 1
+                      } ใหม่อีกครั้ง`,
+                    },
+                    token
+                  );
+                }
+              }
+            }
+            // console.log(isRound);
+            return;
             const round = await roundService.getBeforRound(groupId);
-            const json = JSON.stringify(round);
+            // const json = JSON.stringify(round);
             const roundItem = JSON.parse(json);
             console.log(roundItem);
-            return
-            const isRound = await roundService.getRoundIdinProgress(groupId);
 
             if (isRound === null) {
               const data = {
@@ -504,7 +551,7 @@ const openRound = async (replyToken, userId, groupId, token) => {
     };
     const createRound = await roundService.createRound(round);
     if (createRound) {
-      await BotEvent.openRound(data);
+      await BotEvent.openRound(data, token);
     }
     return;
   }
@@ -1207,6 +1254,8 @@ const confirmRound = async (replyToken, userId, groupId, token) => {
           unit: total,
           userId: item.userId,
           adminId: 2,
+          roundId: round.id,
+          isCancel: false,
         };
 
         await transactionService.createTransaction(transactionData);

@@ -272,8 +272,43 @@ const updateRoundDetail = async (id) => {
   );
   return round;
 };
+const destroyRound = async (id) => {
+  const round = await rounds.destroy({
+    where: {
+      id: id,
+    },
+  });
+  return round;
+};
+const getLastRound = async (id) => {
+  const round = await rounds.findOne({
+    where: {
+      groupId: id,
+    },
+    order: [["createdAt", "DESC"]],
+  });
+  return round;
+};
+
+//updateRoundToInprogress
+const updateRoundToInprogress = async (id) => {
+  const round = await rounds.update(
+    {
+      type: "inProgress",
+    },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  return round;
+};
 
 module.exports = {
+  updateRoundToInprogress,
+  getLastRound,
+  destroyRound,
   createRound,
   getRound,
   checkRoundInprogress,

@@ -19,6 +19,8 @@ module.exports = (sequelize, DataTypes) => {
       unit: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
       adminId: DataTypes.INTEGER,
+      isCancel: DataTypes.BOOLEAN,
+      roundId: DataTypes.INTEGER,
     },
     {
       sequelize,
