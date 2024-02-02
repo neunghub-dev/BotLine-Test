@@ -162,6 +162,20 @@ const getCountRoundInProAndclose = async (data) => {
   });
   return count;
 };
+//get befor round by gruopid
+
+const getBeforRound = async (data) => {
+  //get count
+  const round = await rounds.findAll({
+    where: {
+      groupId: data,
+      type: "success",
+    },
+    order: [["createdAt", "DESC"]],
+  });
+  return round;
+};
+
 const getRoundIdinProgress = async (data) => {
   //get count
   const round = await rounds.findOne({
@@ -279,4 +293,5 @@ module.exports = {
   updateKa,
   updateTotal,
   getAllGroupIdLine,
+  getBeforRound,
 };

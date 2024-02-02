@@ -1,29 +1,26 @@
 const axios = require("axios");
 const flex = require("../constants/flexMesaage");
 
-const openRound = async (data) => {
+const openRound = async (data, token) => {
   const dataMsg = data;
-  await replyMessage(dataMsg.replyToken, flex.startRound(data.message), {
-    type: "image",
-    originalContentUrl: "https://hook.nuenghub-soft.online/img/w12.png",
-    previewImageUrl: "https://hook.nuenghub-soft.online/img/w12.png",
-  });
+  await replyMessage(dataMsg.replyToken, flex.startRound(data.message), token);
 };
 
-const getCreadit = async (data) => {
-  await replyMessage(data.replyToken, flex.checkCredit(data));
+const getCreadit = async (data, token) => {
+  await replyMessage(data.replyToken, flex.checkCredit(data), token);
 };
 
-const showResult = async (replyToken, data, round) => {
-  await replyMessage(replyToken, [
-    flex.showResult(data[0], round),
-    flex.showResultAll(data[1]),
-  ]);
+const showResult = async (replyToken, data, round, token) => {
+  await replyMessage(
+    replyToken,
+    [flex.showResult(data[0], round), flex.showResultAll(data[1])],
+    token
+  );
 };
-const showResultClose = async (replyToken, data, round) => {
-  await replyMessage(replyToken, [data[0], flex.showResultAll(data[1])]);
+const showResultClose = async (replyToken, data, round, token) => {
+  await replyMessage(replyToken, [data[0], flex.showResultAll(data[1])], token);
 };
-const replyMessage = (replyToken, message) => {
+const replyMessage = (replyToken, message, token) => {
   console.log(message);
   const data = [];
   if (message.length > 1) {
@@ -39,8 +36,7 @@ const replyMessage = (replyToken, message) => {
     maxBodyLength: Infinity,
     url: "https://api.line.me/v2/bot/message/reply",
     headers: {
-      Authorization:
-        "Bearer nUBRigFgMx0ZiILPCnRGSOlfAwuv7+QzsqNMA2yunGWfzM+7yjbRQ/tsJEXzn5UdjknV5WdQp2wXWV+nSf+PKHDiHZXcvWcuHBop4ELnRLnRhe7UbknyYuMEQKrmG7c4xllLS/u7SlPU2NX+06z2dgdB04t89/1O/w1cDnyilFU=",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     data: JSON.stringify({
@@ -59,14 +55,13 @@ const replyMessage = (replyToken, message) => {
       return;
     });
 };
-const getProfileInGroupById = async (groupId, userId) => {
+const getProfileInGroupById = async (groupId, userId, token) => {
   try {
     return await axios.get(
       `https://api.line.me/v2/bot/group/${groupId}/member/${userId}`,
       {
         headers: {
-          Authorization:
-            "Bearer nUBRigFgMx0ZiILPCnRGSOlfAwuv7+QzsqNMA2yunGWfzM+7yjbRQ/tsJEXzn5UdjknV5WdQp2wXWV+nSf+PKHDiHZXcvWcuHBop4ELnRLnRhe7UbknyYuMEQKrmG7c4xllLS/u7SlPU2NX+06z2dgdB04t89/1O/w1cDnyilFU=",
+          Authorization: `Bearer ${token}`,
         },
       }
     );

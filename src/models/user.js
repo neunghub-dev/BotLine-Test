@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       uuid_line: DataTypes.STRING,
       line_id: DataTypes.STRING,
       credit: DataTypes.INTEGER,
+      bonus: DataTypes.INTEGER,
     },
     {
       sequelize,

@@ -33,7 +33,7 @@ cron.clearRound();
 // clearDailyOrders.start();
 
 db.sequelize
-  .sync()
+  .sync({ alter: true })
   .then(() => {
     console.log("connect success to sync db.");
     app.listen(port, () => {

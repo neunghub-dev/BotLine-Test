@@ -6,9 +6,123 @@ const bcrypt = require("bcryptjs");
 const getAlluser = async (req, res) => {
   try {
     const user = await usersService.getAlluser();
+    const json = JSON.stringify(user);
+    const userJson = JSON.parse(json);
+    const newData = userJson.map((item) => ({
+      ...item,
+      add: 0,
+      withdraw: 0,
+      win: 0,
+      lose: 0,
+      commision: 0,
+      total: 0,
+    }));
+    const tc = await transactionService.getWinLose();
+    const allTransaction = await transactionService.getAllTransaction();
+    const bonus = [];
+    const credit = [];
+
+    allTransaction.forEach((event) => {
+      const userIndex = credit.findIndex((u) => u.userId === event.userId);
+      if (userIndex === -1) {
+        // User not found, create a new user entry
+        credit.push({
+          userId: event.userId,
+          data: [
+            {
+              event: event.event,
+              unit: event.unit,
+            },
+          ],
+        });
+      } else {
+        // User found, update the existing entry
+        const eventData = credit[userIndex].data.find(
+          (d) => d.event === event.event
+        );
+
+        if (eventData) {
+          // Event type found, update the units
+          eventData.unit += event.unit;
+        } else {
+          // Event type not found, create a new entry for the event
+          credit[userIndex].data.push({
+            event: event.event,
+            unit: event.unit,
+          });
+        }
+      }
+    });
+    console.log(JSON.stringify(credit, null, 2));
+    // allTransaction.forEach((event) => {
+    //   const userIndex = bonus.findIndex((u) => u.userId === event.userId);
+
+    tc.forEach((event) => {
+      const userIndex = bonus.findIndex((u) => u.userId === event.userId);
+
+      if (userIndex === -1) {
+        // User not found, create a new user entry
+        bonus.push({
+          userId: event.userId,
+          data: [
+            {
+              event: event.event,
+              unit: event.unit,
+            },
+          ],
+        });
+      } else {
+        // User found, update the existing entry
+        const eventData = bonus[userIndex].data.find(
+          (d) => d.event === event.event
+        );
+
+        if (eventData) {
+          // Event type found, update the units
+          eventData.unit += event.unit;
+        } else {
+          // Event type not found, create a new entry for the event
+          bonus[userIndex].data.push({
+            event: event.event,
+            unit: event.unit,
+          });
+        }
+      }
+    });
+    newData.forEach((user) => {
+      const userIndex = bonus.findIndex((u) => u.userId === user.id);
+      const userIndex2 = credit.findIndex((u) => u.userId === user.id);
+
+      if (userIndex2 !== -1) {
+        const userData = credit[userIndex2].data;
+        const add = userData.find((event) => event.event === "add")?.unit || 0;
+        const withdraw =
+          userData.find((event) => event.event === "withdraw")?.unit || 0;
+
+        user.add = add;
+        user.withdraw = withdraw;
+      }
+
+      if (userIndex !== -1) {
+        const userData = bonus[userIndex].data;
+        const win = userData.find((event) => event.event === "win")?.unit || 0;
+        const lose =
+          userData.find((event) => event.event === "lose")?.unit || 0;
+
+        user.win = win;
+        user.lose = lose;
+      }
+    });
+
+    newData.forEach((user) => {
+      const total = user.win + user.lose;
+      user.commision = total <= 0 ? 0 : total * 0.005;
+      user.total = user.credit + user.bonus;
+    });
+    // console.log(user);
     return res.status(200).json({
       status: true,
-      data: user,
+      data: newData,
     });
   } catch (error) {}
 };

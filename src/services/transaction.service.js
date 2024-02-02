@@ -10,16 +10,6 @@ const createTransaction = async (data) => {
 //type add and withdraw
 const getAllTransaction = async (id) => {
   const tc = await transaction.findAll({
-    include: [
-      {
-        model: db.Users,
-        attributes: ["name", "tel"],
-      },
-      {
-        model: db.admins,
-        attributes: ["name"],
-      },
-    ],
     where: {
       [Op.or]: [{ event: "withdraw" }, { event: "add" }],
     },
@@ -27,7 +17,18 @@ const getAllTransaction = async (id) => {
   return tc;
 };
 
+//get Win Lose And sum
+const getWinLose = async (id) => {
+  const tc = await transaction.findAll({
+    where: {
+      [Op.or]: [{ event: "win" }, { event: "lose" }],
+    },
+  });
+  return tc;
+};
+
 module.exports = {
+  getWinLose,
   createTransaction,
   getAllTransaction,
 };

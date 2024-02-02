@@ -5,12 +5,16 @@ const Op = db.Sequelize.Op;
 const checkUser = async (id) => {
   //find user from uuid
   const user = users_admins.findOne({
+    include: [
+      {
+        model: db.partner,
+      },
+    ],
     where: {
       uuid: id,
     },
   });
   return user;
-
 };
 
 module.exports = {

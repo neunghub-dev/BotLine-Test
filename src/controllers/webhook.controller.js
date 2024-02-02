@@ -5,6 +5,7 @@ const roundService = require("../services/round.service");
 const transactionService = require("../services/transaction.service");
 const flex = require("../constants/flexMesaage");
 const UserAdmin = require("../services/users_admin.service");
+const partnerService = require("../services/partner.service");
 // ctrl + f go to KeyWord Function
 // KeyWord Check Credit
 // KeyWord Cancel
@@ -14,9 +15,10 @@ const UserAdmin = require("../services/users_admin.service");
 const hookMessageLine = async (req, res) => {
   try {
     if (req.body.events.length !== 0) {
+      let destination = req.body.destination;
+      const pn = await partnerService.getPartnerByDestination(destination);
+      let token = pn.token;
       if (req.body.events[0].message.type === "text") {
-        console.log(JSON.stringify(req.body.events[0], null, 2));
-
         const message = req.body.events[0].message.text;
         const replyToken = req.body.events[0].replyToken;
         const userId = req.body.events[0].source.userId;
@@ -32,11 +34,11 @@ const hookMessageLine = async (req, res) => {
             message === "C" ||
             message === "Check"
           ) {
-            checkCredit(replyToken, userId, groupId);
+            checkCredit(replyToken, userId, groupId, token);
           } else if (message === "x" || message === "X") {
-            cancel(replyToken, userId, groupId);
+            cancel(replyToken, userId, groupId, token);
           } else {
-            playPok(replyToken, userId, groupId, message);
+            playPok(replyToken, userId, groupId, message, token);
           }
         } catch (error) {
           console.log(error);
@@ -46,20 +48,76 @@ const hookMessageLine = async (req, res) => {
           // OpenRound
 
           if (message === "o" || message === "O") {
-            await openRound(replyToken, userId, groupId);
+            await openRound(replyToken, userId, groupId, token);
           } else if (message === "CC" || message === "cc") {
-            await cancelRound(replyToken, userId, groupId);
+            await cancelRound(replyToken, userId, groupId, token);
           } else if (message === "y" || message === "Y") {
-            await closeRound(replyToken, userId, groupId);
+            await closeRound(replyToken, userId, groupId, token);
           } else if (
             (message.charAt(0) === "s" || message.charAt(0) === "S") &&
             message.split(",").length === 7
           ) {
-            await sentResult(replyToken, userId, groupId, message);
+            await sentResult(replyToken, userId, groupId, message, token);
           } else if (message === "cf" || message === "Cf" || message === "CF") {
-            await confirmRound(replyToken, userId, groupId);
+            await confirmRound(replyToken, userId, groupId, token);
           } else if (message === "show") {
-            const getRound = await roundService.getRound(groupId);
+            const round = await roundService.getBeforRound(groupId);
+            const json = JSON.stringify(round);
+            const roundItem = JSON.parse(json);
+            console.log(roundItem);
+            return
+            const isRound = await roundService.getRoundIdinProgress(groupId);
+
+            if (isRound === null) {
+              const data = {
+                message: "ไม่มีรอบที่กำลังเปิดอยู่",
+                replyToken: replyToken,
+              };
+              return await BotEvent.replyMessage(
+                replyToken,
+                {
+                  type: "image",
+                  originalContentUrl:
+                    "https://hook.nuenghub-soft.online/img/w13.png",
+                  previewImageUrl:
+                    "https://hook.nuenghub-soft.online/img/w13.png",
+                },
+                token
+              );
+            } else {
+              const detail = await roundService.getAllRoundDetailByRoundId(
+                isRound.id
+              );
+              const json = JSON.stringify(detail);
+              const detailItem = JSON.parse(json);
+              // const results = await convertArray(
+              //   detailItem,
+              //   groupId,
+              //   replyToken
+              // );
+              let deleteId = [];
+              for (const item of detailItem) {
+                deleteId.push(item.id);
+                const user = await usersService.getCreadit(item.userId);
+                console.log(user);
+                const newCredit = item.isDeduction
+                  ? user.credit + item.unit * 2
+                  : user.credit + item.unit;
+                await usersService.updateCreditById(newCredit, item.userId);
+              }
+              const update = await roundService.updateRoundDetail(deleteId);
+              const cancelRound = await roundService.cancelRound(isRound.id);
+              if (update && cancelRound) {
+                await BotEvent.replyMessage(
+                  replyToken,
+                  {
+                    type: "text",
+                    text: `ยกเลิกรอบที่ ${isRound.round} เรียบร้อย ❌`,
+                  },
+                  token
+                );
+              }
+            }
           }
         }
       }
@@ -70,12 +128,16 @@ const hookMessageLine = async (req, res) => {
   }
   res.sendStatus(200);
 };
-const showAll = async (data, gId, round) => {
+const showAll = async (data, gId, round, token) => {
   let msgString = "";
   msgString += `✅ สรุปรายการแทงรอบที่ ${round} \n`;
   if (data.length !== 0) {
     for await (const entry of data) {
-      const userLine = await BotEvent.getProfileInGroupById(gId, entry.uuid);
+      const userLine = await BotEvent.getProfileInGroupById(
+        gId,
+        entry.uuid,
+        token
+      );
       const name =
         (await userLine?.data) === undefined
           ? "ไม่พบผู้ใช้"
@@ -394,35 +456,34 @@ const convertPokTxt = (data) => {
 //   return outputArray;
 // }
 
-const checkCredit = async (replyToken, userId, groupId) => {
+const checkCredit = async (replyToken, userId, groupId, token) => {
   const val = await usersService.getCreaditByuserId(userId);
   const credit = val.credit;
 
-  const user = await BotEvent.getProfileInGroupById(groupId, userId);
+  const user = await BotEvent.getProfileInGroupById(groupId, userId, token);
   const data = {
     name: user.data.displayName,
     replyToken: replyToken,
     credit: credit.toLocaleString(),
   };
 
-  await BotEvent.getCreadit(data);
+  await BotEvent.getCreadit(data, token);
 };
 
-const openRound = async (replyToken, userId, groupId) => {
+const openRound = async (replyToken, userId, groupId, token) => {
   const isRound = await roundService.checkRoundInprogress(groupId);
   if (isRound) {
-    const data = {
-      message: "มีรอบที่กำลังเปิดอยู่",
-      replyToken: replyToken,
-    };
-    await BotEvent.replyMessage(replyToken, {
-      type: "text",
-      text: "มีรอบที่กำลังเปิดอยู่",
-    });
-    return;
+    return await BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: "มีรอบที่กำลังเปิดอยู่",
+      },
+      token
+    );
   } else {
     const date = new Date();
-    const formattedDate = date.toISOString().split("T")[0].toString();
+    // const formattedDate = date.toISOString().split("T")[0].toString();
     const getRound = await roundService.getRound(groupId);
     const data = {
       message:
@@ -450,22 +511,18 @@ const openRound = async (replyToken, userId, groupId) => {
   // KeyWord CloseRound
 };
 
-const closeRound = async (replyToken, userId, groupId) => {
+const closeRound = async (replyToken, userId, groupId, token) => {
   const isRound = await roundService.getRoundIdinProgress(groupId);
   if (isRound === null) {
-    const data = {
-      message: "ไม่มีรอบที่กำลังเปิดอยู่",
-      replyToken: replyToken,
-    };
-    await BotEvent.replyMessage(
+    return await BotEvent.replyMessage(
       replyToken,
-      BotEvent.replyMessage(replyToken, {
+      {
         type: "image",
         originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
         previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-      })
+      },
+      token
     );
-    return;
   } else {
     const date = new Date();
     const formattedDate = date.toISOString().split("T")[0].toString();
@@ -497,7 +554,8 @@ const closeRound = async (replyToken, userId, groupId) => {
         console.log();
         const userLine = await BotEvent.getProfileInGroupById(
           groupId,
-          i.User.uuid_line
+          i.User.uuid_line,
+          token
         );
         const data = {
           name:
@@ -572,14 +630,15 @@ const closeRound = async (replyToken, userId, groupId) => {
           },
           allData,
         ],
-        1
+        1,
+        token
       );
     }
     return;
   }
 };
 
-const cancelRound = async (replyToken, userId, groupId) => {
+const cancelRound = async (replyToken, userId, groupId, token) => {
   const isRound = await roundService.getRoundIdinProgress(groupId);
 
   if (isRound === null) {
@@ -587,15 +646,15 @@ const cancelRound = async (replyToken, userId, groupId) => {
       message: "ไม่มีรอบที่กำลังเปิดอยู่",
       replyToken: replyToken,
     };
-    await BotEvent.replyMessage(
+    return await BotEvent.replyMessage(
       replyToken,
-      BotEvent.replyMessage(replyToken, {
+      {
         type: "image",
         originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
         previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-      })
+      },
+      token
     );
-    return;
   } else {
     const detail = await roundService.getAllRoundDetailByRoundId(isRound.id);
     const json = JSON.stringify(detail);
@@ -618,15 +677,19 @@ const cancelRound = async (replyToken, userId, groupId) => {
     const update = await roundService.updateRoundDetail(deleteId);
     const cancelRound = await roundService.cancelRound(isRound.id);
     if (update && cancelRound) {
-      await BotEvent.replyMessage(replyToken, {
-        type: "text",
-        text: `ยกเลิกรอบที่ ${isRound.round} เรียบร้อย ❌`,
-      });
+      await BotEvent.replyMessage(
+        replyToken,
+        {
+          type: "text",
+          text: `ยกเลิกรอบที่ ${isRound.round} เรียบร้อย ❌`,
+        },
+        token
+      );
     }
   }
 };
 
-const sentResult = async (replyToken, userId, groupId, message) => {
+const sentResult = async (replyToken, userId, groupId, message, token) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
   // const isRound = await roundService.getCountRoundInProAndclose(groupId);
   if (round !== null) {
@@ -706,10 +769,11 @@ const sentResult = async (replyToken, userId, groupId, message) => {
         transformedData,
         replyToken,
         round.round,
-        groupId
+        groupId,
+        token
       );
       console.log(JSON.stringify(dataSort, null, 2));
-      await BotEvent.showResult(replyToken, dataSort, round.round);
+      await BotEvent.showResult(replyToken, dataSort, round.round, token);
     }
 
     return;
@@ -738,13 +802,24 @@ const sentResult = async (replyToken, userId, groupId, message) => {
       console.log(transformedData);
     }
   } else {
-    BotEvent.replyMessage(replyToken, {
-      type: "text",
-      text: "กรุณาปิดรอบก่อนสรุปผล",
-    });
+    BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: "กรุณาปิดรอบก่อนสรุปผล",
+      },
+      token
+    );
   }
 };
-const sortResult = async (res, results, replyToken, roundNo, groupId) => {
+const sortResult = async (
+  res,
+  results,
+  replyToken,
+  roundNo,
+  groupId,
+  token
+) => {
   const groupedData = res.reduce((result, item) => {
     const key = `${item.userId}`;
     if (!result[key]) {
@@ -809,7 +884,7 @@ const sortResult = async (res, results, replyToken, roundNo, groupId) => {
   if (results !== null) {
     for (const userItem of finalResult) {
       for (const kaItem of userItem.data) {
-        const result = await calculateResult(kaItem, results);
+        const result = await calculateResult(kaItem, results, token);
         kaItem.income = result.income;
         kaItem.balance = result.total;
         kaItem.totalBroken = result.broken;
@@ -836,7 +911,8 @@ const sortResult = async (res, results, replyToken, roundNo, groupId) => {
   for (let i of finalResult) {
     const userLine = await BotEvent.getProfileInGroupById(
       groupId,
-      i.User.uuid_line
+      i.User.uuid_line,
+      token
     );
     const credit = await usersService.getCreadit(i.userId);
     const data = {
@@ -923,7 +999,7 @@ const chunkArray = (array, size) => {
   }
   return chunked_arr;
 };
-const calculateResult = async (data, result) => {
+const calculateResult = async (data, result, token) => {
   const dataPlayer = {
     status: "",
     kaItem: "",
@@ -1051,7 +1127,7 @@ const calculateResult = async (data, result) => {
   }
   return dataPlayer;
 };
-const confirmRound = async (replyToken, userId, groupId) => {
+const confirmRound = async (replyToken, userId, groupId, token) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
   const result = [
     `s${round.k0}`,
@@ -1109,14 +1185,14 @@ const confirmRound = async (replyToken, userId, groupId) => {
   const detail = await roundService.getAllRoundDetailByRoundId(round.id);
   const json = JSON.stringify(detail);
   const detailItem = JSON.parse(json);
-  console.log(detailItem);
 
   const dataSort = await sortResult(
     detailItem,
     transformedData,
     replyToken,
     round.round,
-    groupId
+    groupId,
+    token
   );
 
   if (dataSort[2].length !== 0) {
@@ -1124,6 +1200,17 @@ const confirmRound = async (replyToken, userId, groupId) => {
     let sumBroken = 0;
     let sumUnit = 0;
     for (const item of dataSort[2]) {
+      const total = item.totalIncome - item.totalBroken;
+      if (total !== 0) {
+        const transactionData = {
+          event: total < 0 ? "lose" : "win",
+          unit: total,
+          userId: item.userId,
+          adminId: 2,
+        };
+
+        await transactionService.createTransaction(transactionData);
+      }
       item.data.forEach((play) => {
         if (play.isDeduction) {
           sumUnit += play.unit * 2;
@@ -1131,34 +1218,43 @@ const confirmRound = async (replyToken, userId, groupId) => {
           sumUnit += play.unit;
         }
       });
+
       sumTotal += item.balance;
       sumBroken += item.totalBroken;
       const user = await usersService.getCreadit(item.userId);
       const newCredit = user.credit + item.total;
       await usersService.addCredit(newCredit, item.userId);
     }
+
     const close = await roundService.closeStatus(round.id, groupId);
     const total = await roundService.updateTotal(round.id, sumUnit, sumBroken);
     if (close && total) {
-      BotEvent.replyMessage(replyToken, {
-        type: "text",
-        text: "อัพเดทยอดเรียบร้อย 🎊",
-      });
+      BotEvent.replyMessage(
+        replyToken,
+        {
+          type: "text",
+          text: "อัพเดทยอดเรียบร้อย 🎊",
+        },
+        token
+      );
     }
   } else {
-    BotEvent.replyMessage(replyToken, {
-      type: "text",
-      text: "อัพเดทยอดเรียบร้อย 🎊",
-    });
+    BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: "อัพเดทยอดเรียบร้อย 🎊",
+      },
+      token
+    );
     await roundService.closeStatus(round.id, groupId);
   }
   return;
 };
 
-const cancel = async (replyToken, userId, groupId) => {
+const cancel = async (replyToken, userId, groupId, token) => {
   try {
     const round = await roundService.getRoundIdinProgress(groupId);
-    console.log(round);
     const isRound = await roundService.getRoundIdinProgress(groupId);
     if (round !== null) {
       const id = await usersService.getIdByUUid(userId);
@@ -1182,7 +1278,7 @@ const cancel = async (replyToken, userId, groupId) => {
       });
 
       let msgString = "";
-      const user = await BotEvent.getProfileInGroupById(groupId, userId);
+      const user = await BotEvent.getProfileInGroupById(groupId, userId, token);
       msgString += `👤 คุณ ${user.data.displayName}\n`;
       const val = await usersService.getCreaditByuserId(userId);
       if (total > 0) {
@@ -1202,25 +1298,33 @@ const cancel = async (replyToken, userId, groupId) => {
         userId
       );
       if (update && updateCredit) {
-        BotEvent.replyMessage(replyToken, {
-          type: "text",
-          text: msgString,
-        });
+        BotEvent.replyMessage(
+          replyToken,
+          {
+            type: "text",
+            text: msgString,
+          },
+          token
+        );
       }
 
       return;
     } else {
-      BotEvent.replyMessage(replyToken, {
-        type: "text",
-        text: "ไม่สารถยกเลิกได้",
-      });
+      BotEvent.replyMessage(
+        replyToken,
+        {
+          type: "text",
+          text: "ไม่สารถยกเลิกได้",
+        },
+        token
+      );
     }
   } catch (error) {
     console.log(error);
   }
 };
 
-const playPok = async (replyToken, userId, groupId, message) => {
+const playPok = async (replyToken, userId, groupId, message, token) => {
   try {
     const searchRegex = /[=\/]/g; // This regex matches '=' or '/' globally
     const matches = message.match(searchRegex) ?? [];
@@ -1331,50 +1435,38 @@ const playPok = async (replyToken, userId, groupId, message) => {
             }, {})
           );
 
-          // console.log(sumData);
-          // return;
-          // const sumData = [
-          //   { name: "k1", fight: "k0", unit: 0 },
-          //   { name: "k2", fight: "k0",unit: 0 },
-          //   { name: "k3", fight: "k0",unit: 0 },
-          //   { name: "k4", fight: "k0",unit: 0 },
-          //   { name: "k5", fight: "k0",unit: 0 },
-          //   { name: "k6", fight: "k0",unit: 0 },
-          // ];
-
-          // resultObjects.forEach((item1) => {
-          //   sumData.forEach((item2) => {
-          //     if (item1.name === item2.name) {
-          //       item2.unit += item1.unit;
-          //     }
-          //   });
-          // });
-          // console.log(sumData);
-
-          // return;
           const to2000 = sumData.filter((item) => item.unit > 2000).length;
           const noi50 = sumData.filter(
             (item) => item.unit < 10 && item.unit !== 0
           ).length;
 
           if (to2000 !== 0 && noi50 !== 0) {
-            BotEvent.replyMessage(replyToken, {
-              type: "text",
-              text: "ไม่สามารถเดิมพันได้น้อยกว่า 10 บาท/ขา หรือ มากกว่า 2000 บาท/ขา",
-            });
-            return;
+            return BotEvent.replyMessage(
+              replyToken,
+              {
+                type: "text",
+                text: "ไม่สามารถเดิมพันได้น้อยกว่า 10 บาท/ขา หรือ มากกว่า 2000 บาท/ขา",
+              },
+              token
+            );
           } else if (noi50 !== 0) {
-            BotEvent.replyMessage(replyToken, {
-              type: "text",
-              text: "ไม่สามารถเดิมพันได้น้อยกว่า 10 บาท/ขา",
-            });
-            return;
+            return BotEvent.replyMessage(
+              replyToken,
+              {
+                type: "text",
+                text: "ไม่สามารถเดิมพันได้น้อยกว่า 10 บาท/ขา",
+              },
+              token
+            );
           } else if (to2000 !== 0) {
-            BotEvent.replyMessage(replyToken, {
-              type: "text",
-              text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
-            });
-            return;
+            return BotEvent.replyMessage(
+              replyToken,
+              {
+                type: "text",
+                text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
+              },
+              token
+            );
           }
 
           const tempData =
@@ -1388,16 +1480,7 @@ const playPok = async (replyToken, userId, groupId, message) => {
 
           let checkKa2000 = false;
           let output = "";
-          // console.log(checkKa2000);
-          // const oldData = [
-          //   { name: "k0", unit: 0 },
-          //   { name: "k1", unit: 0 },
-          //   { name: "k2", unit: 0 },
-          //   { name: "k3", unit: 0 },
-          //   { name: "k4", unit: 0 },
-          //   { name: "k5", unit: 0 },
-          //   { name: "k6", unit: 0 },
-          // ];
+
           if (detailItem.length !== 0) {
             const dataSort = await sortResult(
               detailItem,
@@ -1432,12 +1515,15 @@ const playPok = async (replyToken, userId, groupId, message) => {
           // return;
 
           if (checkKa2000) {
-            BotEvent.replyMessage(replyToken, {
-              type: "text",
-              text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
-            });
             checkKa2000 = false;
-            return;
+            return BotEvent.replyMessage(
+              replyToken,
+              {
+                type: "text",
+                text: "ไม่สามารถเดิมพันได้เกิน 2000 บาท/ขา",
+              },
+              token
+            );
           }
           // check ยอดรวมกันถึง 2000 บาทไหม <--
 
@@ -1445,8 +1531,12 @@ const playPok = async (replyToken, userId, groupId, message) => {
 
           let msgString = "";
           if (!checkKa2000) {
-            const user = await BotEvent.getProfileInGroupById(groupId, userId);
-            console.log(user.data.displayName);
+            const user = await BotEvent.getProfileInGroupById(
+              groupId,
+              userId,
+              token
+            );
+
             msgString += `👤 คุณ ${user.data.displayName}\n`;
             msgString += "-------------------\n";
             outputData.map((item) => {
@@ -1465,11 +1555,14 @@ const playPok = async (replyToken, userId, groupId, message) => {
             } else {
               isCheck = true;
               isDeduction = false;
-              BotEvent.replyMessage(replyToken, {
-                type: "text",
-                text: "ยอดเงินไม่พอ",
-              });
-              return;
+              return BotEvent.replyMessage(
+                replyToken,
+                {
+                  type: "text",
+                  text: "ยอดเงินไม่พอ",
+                },
+                token
+              );
             }
 
             if (!isCheck) {
@@ -1530,27 +1623,39 @@ const playPok = async (replyToken, userId, groupId, message) => {
                   // msgString += `✅ ขา ${item.name.charAt(1)} = ${
                   //   item.unit
                   // } บ.\n`;
-                  BotEvent.replyMessage(replyToken, {
-                    type: "text",
-                    text: msgString,
-                  });
+                  return BotEvent.replyMessage(
+                    replyToken,
+                    {
+                      type: "text",
+                      text: msgString,
+                    },
+                    token
+                  );
                 }
               } else {
-                BotEvent.replyMessage(replyToken, {
-                  type: "text",
-                  text: "ไม่พบข้อมูลผู้ใช้",
-                });
+                return BotEvent.replyMessage(
+                  replyToken,
+                  {
+                    type: "text",
+                    text: "ไม่พบข้อมูลผู้ใช้",
+                  },
+                  token
+                );
               }
             }
           }
         }
         //ยอดเก่า -->
       } else {
-        BotEvent.replyMessage(replyToken, {
-          type: "image",
-          originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-          previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-        });
+        return BotEvent.replyMessage(
+          replyToken,
+          {
+            type: "image",
+            originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
+            previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
+          },
+          token
+        );
       }
     }
   } catch (error) {
