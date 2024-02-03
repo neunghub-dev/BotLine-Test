@@ -5,7 +5,28 @@ const bcrypt = require("bcryptjs");
 
 const getAlluser = async (req, res) => {
   try {
-    const user = await usersService.getAlluser();
+    let user = [];
+    const pdId = req.partnerId;
+    const { keyword } = req.query;
+    console.log(keyword);
+    if (keyword) {
+      console.log("keyword");
+      user = await usersService.getAlluser(keywor, pdId);
+      if (!user) {
+        return res.status(200).json({
+          status: false,
+          message: "User not found",
+        });
+      }
+    } else {
+      console.log("no keyword");
+      user = await usersService.getAlluser(undefined, pdId);
+      // return res.status(200).json({
+      //   status: true,
+      //   data: user,
+      // });
+    }
+    // const user = await usersService.getAlluser();
     const json = JSON.stringify(user);
     const userJson = JSON.parse(json);
     const newData = userJson.map((item) => ({
@@ -53,7 +74,7 @@ const getAlluser = async (req, res) => {
         }
       }
     });
-    console.log(JSON.stringify(credit, null, 2));
+    // console.log(JSON.stringify(credit, null, 2));
     // allTransaction.forEach((event) => {
     //   const userIndex = bonus.findIndex((u) => u.userId === event.userId);
 
@@ -124,7 +145,12 @@ const getAlluser = async (req, res) => {
       status: true,
       data: newData,
     });
-  } catch (error) {}
+  } catch (error) {
+    return res.status(400).json({
+      status: false,
+      message: error,
+    });
+  }
 };
 
 const manageCredit = async (req, res) => {

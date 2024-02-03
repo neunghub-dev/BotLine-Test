@@ -8,6 +8,7 @@ const login = async (req, res) => {
 
   try {
     const users = await authService.login(username);
+    console.log(users);
 
     if (!users) {
       return res.status(404).json({
@@ -32,7 +33,7 @@ const login = async (req, res) => {
     }
 
     const access_token = jwt.sign(
-      { id: users.id, role: users.role },
+      { id: users.id, role: users.role, partnerId: users.partner_id },
       authConfig.secret,
       {
         expiresIn: "30d", // 1 mount
@@ -47,6 +48,7 @@ const login = async (req, res) => {
         token_type: "Bearer",
         expires_in: 2592000,
         role: users.role,
+        partnerId: users.partner_id,
       },
     });
   } catch (err) {

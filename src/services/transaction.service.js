@@ -11,6 +11,7 @@ const createTransaction = async (data) => {
 const getAllTransaction = async (id) => {
   const tc = await transaction.findAll({
     where: {
+      isCancel: false,
       [Op.or]: [{ event: "withdraw" }, { event: "add" }],
     },
   });
@@ -20,6 +21,7 @@ const getAllTransaction = async (id) => {
 //get Win Lose And sum
 const getWinLose = async (id) => {
   const tc = await transaction.findAll({
+    isCancel: false,
     where: {
       [Op.or]: [{ event: "win" }, { event: "lose" }],
     },

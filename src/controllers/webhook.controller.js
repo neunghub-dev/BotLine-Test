@@ -62,31 +62,54 @@ const hookMessageLine = async (req, res) => {
             await confirmRound(replyToken, userId, groupId, token);
           } else if (message === "show") {
             const isRound = await roundService.getRoundIdinProgress(groupId);
-            const detail = await roundService.getAllRoundDetailByRoundId(
-              isRound.id
-            );
-            const json = JSON.stringify(detail);
-            const detailItem = JSON.parse(json);
-            if (detailItem.length === 0) {
-              const destroy = await roundService.destroyRound(isRound.id);
-              if (destroy) {
+            // check round in progress
+            if (isRound) {
+              const detail = await roundService.getAllRoundDetailByRoundId(
+                isRound.id
+              );
+              const json1 = JSON.stringify(detail);
+              const detailItem1 = JSON.parse(json1);
+
+              // kill round
+              if (detailItem1.length === 0) {
+                // check round in progress playing ?
+                // case not play
+                const destroy = await roundService.destroyRound(isRound.id);
                 const beforeRound = await roundService.getLastRound(groupId);
-                // const detail = await roundService.getAllRoundDetailByRoundId(
-                //   beforeRound.id
-                // );
+                const detail = await roundService.getAllRoundDetailByRoundId(
+                  beforeRound.id
+                );
+                const json = JSON.stringify(detail);
+                const detailItem = JSON.parse(json);
+                //
+                console.log(detailItem);
+
+                for (let item of detailItem) {
+                  if (!item.isCancel) {
+                    const user = await usersService.getCreadit(item.userId);
+                    const newCredit = item.isDeduction
+                      ? user.credit - item.unit * 2
+                      : user.credit - item.unit;
+                    await usersService.updateCreditById(newCredit, item.userId);
+                    console.log(`newCredit ${newCredit}`);
+                  }
+                }
+
                 const transaction =
                   await transactionService.getTrasactionByRounndId(
                     beforeRound.id
                   );
-                transaction.forEach(async (item) => {
+                for (let item of transaction) {
                   const user = await usersService.getCreadit(item.userId);
                   const newCredit =
                     item.event === "win"
                       ? user.credit - item.unit
                       : user.credit + item.unit;
+                  console.log(`newCredit ${newCredit} userId ${item.userId}`);
                   await usersService.updateCreditById(newCredit, item.userId);
                   await transactionService.updateTransaction(item.id);
-                });
+                }
+
                 // step
                 //open beforeRound inprogress
                 const updateRound = await roundService.updateRoundToInprogress(
@@ -106,8 +129,126 @@ const hookMessageLine = async (req, res) => {
                     token
                   );
                 }
+              } else {
+                for (let item of detailItem1) {
+                  if (!item.isCancel) {
+                    const user = await usersService.getCreadit(item.userId);
+                    const newCredit = item.isDeduction
+                      ? user.credit + item.unit * 2
+                      : user.credit + item.unit;
+                    await usersService.updateCreditById(newCredit, item.userId);
+                    console.log(`newCredit1 ${newCredit}`);
+                    const del = await roundService.destroyRoundDetail(item.id);
+                  }
+                }
+
+                const destroy = await roundService.destroyRound(isRound.id);
+                const beforeRound = await roundService.getLastRound(groupId);
+                const detail = await roundService.getAllRoundDetailByRoundId(
+                  beforeRound.id
+                );
+                const json = JSON.stringify(detail);
+                const detailItem = JSON.parse(json);
+                //
+                detailItem.forEach(async (item) => {
+                  if (!item.isCancel) {
+                    const user = await usersService.getCreadit(item.userId);
+                    const newCredit = item.isDeduction
+                      ? user.credit - item.unit * 2
+                      : user.credit - item.unit;
+                    console.log(`newCredit2 ${newCredit}`);
+                    await usersService.updateCreditById(newCredit, item.userId);
+                  }
+                });
+                const transaction =
+                  await transactionService.getTrasactionByRounndId(
+                    beforeRound.id
+                  );
+                console.log(transaction);
+                transaction.forEach(async (item) => {
+                  const user = await usersService.getCreadit(item.userId);
+                  const newCredit =
+                    item.event === "win"
+                      ? user.credit - item.unit
+                      : user.credit + item.unit;
+                  console.log(`newCredit ${newCredit} userId ${item.userId}`);
+                  await usersService.updateCreditById(newCredit, item.userId);
+                  await transactionService.updateTransaction(item.id);
+                });
+                // step
+                // open beforeRound inprogress
+                const updateRound = await roundService.updateRoundToInprogress(
+                  beforeRound.id
+                );
+                if (updateRound) {
+                  await BotEvent.replyMessage(
+                    replyToken,
+                    {
+                      type: "text",
+                      text: `ยกเลิกรอบที่ ${
+                        isRound.round
+                      } เรียบร้อย ❌\nกรุณาใส่ผลรอบที่ ${
+                        isRound.round - 1
+                      } ใหม่อีกครั้ง`,
+                    },
+                    token
+                  );
+                }
+              }
+            } else {
+              // const destroy = await roundService.destroyRound(isRound.id);
+              const beforeRound = await roundService.getLastRound(groupId);
+              const detail = await roundService.getAllRoundDetailByRoundId(
+                beforeRound.id
+              );
+              const json = JSON.stringify(detail);
+              const detailItem = JSON.parse(json);
+              //
+              console.log(detailItem);
+
+              for (let item of detailItem) {
+                if (!item.isCancel) {
+                  const user = await usersService.getCreadit(item.userId);
+                  const newCredit = item.isDeduction
+                    ? user.credit - item.unit * 2
+                    : user.credit - item.unit;
+                  await usersService.updateCreditById(newCredit, item.userId);
+                  console.log(`newCredit ${newCredit}`);
+                }
+              }
+
+              const transaction =
+                await transactionService.getTrasactionByRounndId(
+                  beforeRound.id
+                );
+              for (let item of transaction) {
+                const user = await usersService.getCreadit(item.userId);
+                const newCredit =
+                  item.event === "win"
+                    ? user.credit - item.unit
+                    : user.credit + item.unit;
+                console.log(`newCredit ${newCredit} userId ${item.userId}`);
+                await usersService.updateCreditById(newCredit, item.userId);
+                await transactionService.updateTransaction(item.id);
+              }
+
+              // step
+              //open beforeRound inprogress
+              const updateRound = await roundService.updateRoundToInprogress(
+                beforeRound.id
+              );
+              if (updateRound) {
+                await BotEvent.replyMessage(
+                  replyToken,
+                  {
+                    type: "text",
+                    text: `กรุณาใส่ผลรอบที่ ${beforeRound.round} ใหม่อีกครั้ง`,
+                  },
+                  token
+                );
               }
             }
+
             // console.log(isRound);
             return;
             const round = await roundService.getBeforRound(groupId);
@@ -962,6 +1103,7 @@ const sortResult = async (
       token
     );
     const credit = await usersService.getCreadit(i.userId);
+    console.log(credit);
     const data = {
       name:
         userLine?.data === undefined
@@ -973,6 +1115,7 @@ const sortResult = async (
           : `+${i.totalIncome - i.totalBroken}`
       } = ${credit.credit + i.total}\n`,
     };
+    console.log(data);
     data1.push(data);
   }
   // console.log(JSON.stringify(finalResult, null, 2));

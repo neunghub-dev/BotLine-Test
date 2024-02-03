@@ -23,6 +23,7 @@ const verifyToken = async (req, res, next) => {
     req.userId = decoded.id;
     req.role = decoded.role;
     req.token = token;
+    req.partnerId = decoded.partnerId;
     next();
   });
 };

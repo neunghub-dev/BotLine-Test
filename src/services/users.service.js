@@ -2,8 +2,48 @@ const db = require("../models");
 const users = db.Users;
 const Op = db.Sequelize.Op;
 
-const getAlluser = async () => {
-  const user = await users.findAll();
+const getAlluser = async (keyword, partner_id) => {
+  console.log("keyword", keyword);
+  console.log("partner_id", partner_id);
+  let user = [];
+  // let whereClause = {};
+  if (partner_id !== undefined && partner_id !== 0) {
+    if (keyword !== undefined) {
+      user = await users.findAll({
+        where: {
+          partner_id: partner_id,
+          [Op.or]: [
+            { name: { [Op.like]: `%${keyword}%` } },
+            { tel: { [Op.like]: `%${keyword}%` } },
+            { line_id: { [Op.like]: `%${keyword}%` } },
+          ],
+        },
+      });
+    } else {
+      user = await users.findAll({
+        where: {
+          partner_id: partner_id,
+        },
+      });
+    }
+  } else {
+    if (keyword !== undefined) {
+      user = await users.findAll({
+        where: {
+          [Op.or]: [
+            { name: { [Op.like]: `%${keyword}%` } },
+            { tel: { [Op.like]: `%${keyword}%` } },
+            { line_id: { [Op.like]: `%${keyword}%` } },
+          ],
+        },
+      });
+    } else {
+      user = await users.findAll();
+    }
+  }
+
+  // console.log(JSON.stringify(whereClause, null, 2));
+
   return user;
 };
 

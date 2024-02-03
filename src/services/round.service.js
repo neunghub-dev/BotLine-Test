@@ -280,6 +280,15 @@ const destroyRound = async (id) => {
   });
   return round;
 };
+//destroy round detail
+const destroyRoundDetail = async (id) => {
+  const round = await roundDetail.destroy({
+    where: {
+      id: id,
+    },
+  });
+  return round;
+};
 const getLastRound = async (id) => {
   const round = await rounds.findOne({
     where: {
@@ -329,4 +338,5 @@ module.exports = {
   updateTotal,
   getAllGroupIdLine,
   getBeforRound,
+  destroyRoundDetail,
 };

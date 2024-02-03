@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       line_id: DataTypes.STRING,
       credit: DataTypes.INTEGER,
       bonus: DataTypes.INTEGER,
+      partner_id: DataTypes.INTEGER,
     },
     {
       sequelize,
