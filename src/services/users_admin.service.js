@@ -17,6 +17,12 @@ const checkUser = async (id) => {
   return user;
 };
 
+//add useradmin
+const addUserAdmin = async (data) => {
+  const user = await users_admins.create(data);
+  return user;
+};
 module.exports = {
   checkUser,
+  addUserAdmin,
 };

@@ -8,6 +8,7 @@ const adminController = require("../controllers/admin.controller");
 const authController = require("../controllers/auth.controller");
 const transactionController = require("../controllers/transaction.controller");
 const userAdminController = require("../controllers/users_admin.controller");
+const partnerController = require("../controllers/partner.controller");
 const authJwt = require("../middleware/authJwt");
 
 router.post("/webhook", webhookController.hookMessageLine);
@@ -33,5 +34,14 @@ router.get(
   [authJwt.verifyToken],
   transactionController.getAllTransaction
 );
+router.get(
+  "/transaction/:id",
+  [authJwt.verifyToken],
+  transactionController.getAllTransactionByPartner
+);
+router.get("/partner", partnerController.getAllPartners);
+router.get("/partners", partnerController.getPartnerByRefCode);
+
+router.put("/users/commision", usersController.addCommision);
 
 module.exports = router;

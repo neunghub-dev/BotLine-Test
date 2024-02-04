@@ -10,6 +10,24 @@ const getPartnerByDestination = async (id) => {
   });
   return user;
 };
+
+//get all partner
+const getAllPartner = async () => {
+  const partners = partner.findAll();
+  return partners;
+};
+
+//get partner by refCode
+const getPartnerByRefCode = async (refCode) => {
+  const partners = partner.findOne({
+    where: {
+      refCode: refCode,
+    },
+  });
+  return partners;
+};
 module.exports = {
+  getPartnerByRefCode,
   getPartnerByDestination,
+  getAllPartner,
 };

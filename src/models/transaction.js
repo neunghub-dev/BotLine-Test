@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       adminId: DataTypes.INTEGER,
       isCancel: DataTypes.BOOLEAN,
       roundId: DataTypes.INTEGER,
+      partner_id: DataTypes.INTEGER,
     },
     {
       sequelize,

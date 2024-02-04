@@ -11,7 +11,7 @@ const getAlluser = async (req, res) => {
     console.log(keyword);
     if (keyword) {
       console.log("keyword");
-      user = await usersService.getAlluser(keywor, pdId);
+      user = await usersService.getAlluser(keyword, pdId);
       if (!user) {
         return res.status(200).json({
           status: false,
@@ -40,6 +40,7 @@ const getAlluser = async (req, res) => {
     }));
     const tc = await transactionService.getWinLose();
     const allTransaction = await transactionService.getAllTransaction();
+    console.log(allTransaction);
     const bonus = [];
     const credit = [];
 
@@ -119,7 +120,9 @@ const getAlluser = async (req, res) => {
         const add = userData.find((event) => event.event === "add")?.unit || 0;
         const withdraw =
           userData.find((event) => event.event === "withdraw")?.unit || 0;
-
+        const bonus =
+          userData.find((event) => event.event === "bonus")?.unit || 0;
+        user.bonus = bonus;
         user.add = add;
         user.withdraw = withdraw;
       }
@@ -151,6 +154,62 @@ const getAlluser = async (req, res) => {
       message: error,
     });
   }
+};
+const addCommision = async (req, res) => {
+  const { userId, commision } = req.body;
+  const transaction = await transactionService.getWinLoseById(userId);
+  let winSum = 0;
+  let loseSum = 0;
+
+  // Loop through the data array
+  transaction.forEach((item) => {
+    // Check if the event is "win" or "lose"
+    if (item.event === "win") {
+      winSum += item.unit;
+    } else if (item.event === "lose") {
+      loseSum += item.unit;
+    }
+  });
+  let total = (winSum + loseSum) * 0.005;
+  if (total > 0) {
+    const getUser = await usersService.getCreadit(userId);
+    const newCredit = parseInt(getUser.credit) + parseInt(total);
+    const addCredit = await usersService.addCredit(newCredit, userId);
+
+    if (addCredit) {
+      for (let x of transaction) {
+        await transactionService.updateTransaction(x.id);
+      }
+    }
+    return res.status(200).json({
+      status: true,
+      message: "Add commision success",
+    });
+  } else {
+    return res.status(200).json({
+      status: false,
+      message: "No commision",
+    });
+  }
+  // if (!userId || !commision) {
+  //   return res.status(400).json({
+  //     status: false,
+  //     message: "Please fill in all fields",
+  //   });
+  // } else {
+  //   const user = await usersService.addCommision(userId, commision);
+  //   if (!user) {
+  //     return res.status(400).json({
+  //       status: false,
+  //       message: "Please fill in all fields",
+  //     });
+  //   } else {
+  //     return res.status(200).json({
+  //       status: true,
+  //       message: "Add commision success",
+  //     });
+  //   }
+  // }
 };
 
 const manageCredit = async (req, res) => {
@@ -185,6 +244,7 @@ const manageCredit = async (req, res) => {
               unit: credit,
               event: "add",
               adminId: adminId,
+              isCancel: false,
             };
             const createTransaction =
               await transactionService.createTransaction(data);
@@ -220,6 +280,7 @@ const manageCredit = async (req, res) => {
                 unit: credit,
                 event: "withdraw",
                 adminId: adminId,
+                isCancel: false,
               };
               const createTransaction =
                 await transactionService.createTransaction(data);
@@ -234,6 +295,36 @@ const manageCredit = async (req, res) => {
                   message: "Add credit success",
                 });
               }
+            }
+          }
+        } else if (event === "bonus") {
+          const newCredit = parseInt(getUser.credit) + parseInt(credit);
+          const addCredit = await usersService.addCredit(newCredit, userId);
+          if (!addCredit) {
+            return res.status(400).json({
+              status: false,
+              message: "Please fill in all fields",
+            });
+          } else {
+            const data = {
+              userId: userId,
+              unit: credit,
+              event: "bonus",
+              adminId: adminId,
+              isCancel: false,
+            };
+            const createTransaction =
+              await transactionService.createTransaction(data);
+            if (!createTransaction) {
+              return res.status(400).json({
+                status: false,
+                message: "Please fill in all fields",
+              });
+            } else {
+              return res.status(200).json({
+                status: true,
+                message: "Add credit success",
+              });
             }
           }
         }
@@ -251,8 +342,8 @@ const createUser = async (req, res) => {
         message: "You don't have permission",
       });
     }
-    const { username, password, name, role, tel } = req.body;
-    if (!username || !password || !name || !role || !tel) {
+    const { username, password, name, role, tel, partner_id } = req.body;
+    if (!username || !password || !name || !role || !tel || !partner_id) {
       return res.status(400).json({
         status: false,
         message: "Please fill in all fields",
@@ -269,10 +360,11 @@ const createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const data = {
           name: name,
-          role: "admin",
+          role: role,
           tel: tel,
           username: username,
           password: hashedPassword,
+          partner_id: partner_id,
         };
         const createUser = await adminService.createUser(data);
         if (!createUser) {
@@ -306,4 +398,5 @@ module.exports = {
   getAlluser,
   createUser,
   getAllAdmin,
+  addCommision,
 };

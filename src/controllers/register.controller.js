@@ -2,7 +2,7 @@ const usersService = require("../services/users.service");
 
 const register = async (req, res) => {
   try {
-    const { name, tel, id_line, uuid } = req.body;
+    const { name, tel, id_line, uuid, partner_id, recommend } = req.body;
     if (!name || !tel || !id_line || !uuid) {
       return res.status(400).json({
         status: false,
@@ -22,6 +22,9 @@ const register = async (req, res) => {
         uuid_line: uuid,
         line_id: id_line,
         credit: 0,
+        bonus: 0,
+        partner_id: partner_id,
+        recommend: recommend,
       };
       const createUser = await usersService.register(data);
       if (!createUser) {
