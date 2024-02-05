@@ -6,6 +6,7 @@ const transactionService = require("../services/transaction.service");
 const flex = require("../constants/flexMesaage");
 const UserAdmin = require("../services/users_admin.service");
 const partnerService = require("../services/partner.service");
+const crypto = require("crypto");
 // ctrl + f go to KeyWord Function
 // KeyWord Check Credit
 // KeyWord Cancel
@@ -20,6 +21,10 @@ const hookMessageLine = async (req, res) => {
       let token = pn.token;
       if (req.body.events[0].message.type === "text") {
         const message = req.body.events[0].message.text;
+        if (message === "link") {
+          await getLinkInvite(replyToken, userId, message, token);
+        }
+        return;
         const replyToken = req.body.events[0].replyToken;
         const userId = req.body.events[0].source.userId;
         const groupId = req.body.events[0].source.groupId;
@@ -60,7 +65,7 @@ const hookMessageLine = async (req, res) => {
             await sentResult(replyToken, userId, groupId, message, token);
           } else if (message === "cf" || message === "Cf" || message === "CF") {
             await confirmRound(replyToken, userId, groupId, token);
-          } else if (message === "show") {
+          } else if (message === "ccf") {
             const isRound = await roundService.getRoundIdinProgress(groupId);
             // check round in progress
             if (isRound) {
@@ -74,6 +79,9 @@ const hookMessageLine = async (req, res) => {
               if (detailItem1.length === 0) {
                 // check round in progress playing ?
                 // case not play
+                console.log("----------");
+                console.log("case not play");
+                console.log("----------");
                 const destroy = await roundService.destroyRound(isRound.id);
                 const beforeRound = await roundService.getLastRound(groupId);
                 const detail = await roundService.getAllRoundDetailByRoundId(
@@ -130,6 +138,9 @@ const hookMessageLine = async (req, res) => {
                   );
                 }
               } else {
+                console.log("----------");
+                console.log("case play");
+                console.log("----------");
                 for (let item of detailItem1) {
                   if (!item.isCancel) {
                     const user = await usersService.getCreadit(item.userId);
@@ -196,6 +207,9 @@ const hookMessageLine = async (req, res) => {
                 }
               }
             } else {
+              console.log("----------");
+              console.log("case not before round");
+              console.log("----------");
               // const destroy = await roundService.destroyRound(isRound.id);
               const beforeRound = await roundService.getLastRound(groupId);
               const detail = await roundService.getAllRoundDetailByRoundId(
@@ -204,16 +218,22 @@ const hookMessageLine = async (req, res) => {
               const json = JSON.stringify(detail);
               const detailItem = JSON.parse(json);
               //
-              console.log(detailItem);
 
               for (let item of detailItem) {
                 if (!item.isCancel) {
                   const user = await usersService.getCreadit(item.userId);
+                  console.log("----------");
+                  console.log("before Credit", user.credit);
+                  console.log("----------");
                   const newCredit = item.isDeduction
                     ? user.credit - item.unit * 2
                     : user.credit - item.unit;
                   await usersService.updateCreditById(newCredit, item.userId);
-                  console.log(`newCredit ${newCredit}`);
+                  const users = await usersService.getCreadit(item.userId);
+                  console.log("----------");
+                  console.log(`newCredit Before Round ${newCredit}`);
+                  console.log("Net Credit", users.credit);
+                  console.log("----------");
                 }
               }
 
@@ -223,12 +243,23 @@ const hookMessageLine = async (req, res) => {
                 );
               for (let item of transaction) {
                 const user = await usersService.getCreadit(item.userId);
+                console.log("----------");
+                console.log("before Credit", user.credit);
+                console.log("----------");
                 const newCredit =
-                  item.event === "win"
-                    ? user.credit - item.unit
-                    : user.credit + item.unit;
-                console.log(`newCredit ${newCredit} userId ${item.userId}`);
+                  item.event === "lose"
+                    ? user.credit + item.unit
+                    : user.credit - item.unit;
                 await usersService.updateCreditById(newCredit, item.userId);
+                const users = await usersService.getCreadit(item.userId);
+                console.log("----------");
+                console.log(
+                  ` Win/Lose type ${item.event} newCredit ${newCredit}`
+                );
+                console.log("Net Credit", users.credit);
+                console.log("----------");
+                // console.log(`newCredit ${newCredit} userId ${item.userId}`);
+
                 await transactionService.updateTransaction(item.id);
               }
 
@@ -355,7 +386,19 @@ const checkPok = (data) => {
     }
   }
 };
-
+const getLinkInvite = (replyToken, userId, message, token) => {};
+const encryptSymmetric = (data, key) => {
+  const cipher = crypto.createCipher("aes-256-cbc", key);
+  let ciphertext = cipher.update(plaintext, "utf-8", "base64");
+  ciphertext += cipher.final("base64");
+  return ciphertext;
+};
+const decryptSymmetric = (data, key) => {
+  const decipher = crypto.createDecipher("aes-256-cbc", key);
+  let plaintext = decipher.update(ciphertext, "base64", "utf-8");
+  plaintext += decipher.final("utf-8");
+  return plaintext;
+};
 const convertPokNumber = (data) => {
   //pok 9*2  = 999
   //pok 9*1 = 998
@@ -1394,7 +1437,7 @@ const confirmRound = async (replyToken, userId, groupId, token) => {
       if (total !== 0) {
         const transactionData = {
           event: total < 0 ? "lose" : "win",
-          unit: total,
+          unit: total < 0 ? Math.abs(total) : total,
           userId: item.userId,
           adminId: 2,
           roundId: round.id,
