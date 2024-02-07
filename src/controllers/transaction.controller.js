@@ -30,6 +30,10 @@ const getAllTransactionByPartner = async (req, res) => {
 
     user.forEach((item) => {
       const { event, unit } = item;
+      if (item.event === "comission") {
+        eventSummary["bonus"] += unit;
+      }
+
       eventSummary[event] += unit;
     });
 

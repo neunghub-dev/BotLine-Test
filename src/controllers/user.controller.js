@@ -36,6 +36,7 @@ const getAlluser = async (req, res) => {
       commision: 0,
       total: 0,
     }));
+
     const tc = await transactionService.getWinLose();
     const allTransaction = await transactionService.getAllTransaction();
 
@@ -73,17 +74,14 @@ const getAlluser = async (req, res) => {
         }
       }
     });
-    // console.log(JSON.stringify(credit, null, 2));
-    // allTransaction.forEach((event) => {
-    //   const userIndex = bonus.findIndex((u) => u.userId === event.userId);
-
-    tc.forEach((event) => {
+    for (let event of tc) {
       const userIndex = bonus.findIndex((u) => u.userId === event.userId);
-
       if (userIndex === -1) {
+        const user = await usersService.getUserById(event.userId);
         // User not found, create a new user entry
         bonus.push({
           userId: event.userId,
+          invite_id: user.invite_id,
           data: [
             {
               event: event.event,
@@ -96,7 +94,6 @@ const getAlluser = async (req, res) => {
         const eventData = bonus[userIndex].data.find(
           (d) => d.event === event.event
         );
-
         if (eventData) {
           // Event type found, update the units
           eventData.unit += event.unit;
@@ -108,9 +105,8 @@ const getAlluser = async (req, res) => {
           });
         }
       }
-    });
+    }
     newData.forEach((user) => {
-      const userIndex = bonus.findIndex((u) => u.userId === user.invite_id);
       const userIndex2 = credit.findIndex((u) => u.userId === user.id);
 
       if (userIndex2 !== -1) {
@@ -120,22 +116,32 @@ const getAlluser = async (req, res) => {
           userData.find((event) => event.event === "withdraw")?.unit || 0;
         const bonus =
           userData.find((event) => event.event === "bonus")?.unit || 0;
-        user.bonus = bonus;
+        const comission =
+          userData.find((event) => event.event === "comission")?.unit || 0;
+        user.bonus = bonus + comission;
         user.add = add;
         user.withdraw = withdraw;
       }
-
-      if (userIndex !== -1) {
-        const userData = bonus[userIndex].data;
-        const win = userData.find((event) => event.event === "win")?.unit || 0;
-        const lose =
-          userData.find((event) => event.event === "lose")?.unit || 0;
-
-        user.win = win;
-        user.lose = lose;
-      }
+      let win = 0;
+      let lose = 0;
+      bonus.forEach((event) => {
+        if (event.invite_id === user.id) {
+          event.data.forEach((event) => {
+            if (event.event === "win") {
+              win += event.unit;
+            } else if (event.event === "lose") {
+              lose += event.unit;
+            }
+          });
+        }
+      });
+      console.log("-----------");
+      console.log(win);
+      console.log(lose);
+      console.log("-----------");
+      user.win = win;
+      user.lose = lose;
     });
-
     newData.forEach((user) => {
       const total = user.win + user.lose;
       user.commision = total <= 0 ? 0 : total * 0.005;
@@ -154,12 +160,19 @@ const getAlluser = async (req, res) => {
   }
 };
 const addCommision = async (req, res) => {
-  const { userId, commision } = req.body;
-  const getUser = await usersService.getUserById(userId);
-  console.log(getUser.invite_id);
-  const transaction = await transactionService.getWinLoseById(
-    getUser.invite_id
-  );
+  const adminId = req.userId;
+  const { userId } = req.body;
+  const user = await usersService.getCreadit(userId);
+  const getUser = await usersService.getIdByInvite(userId);
+  //convert getUser to array
+
+  const json = JSON.stringify(getUser);
+  const userJson = JSON.parse(json);
+  const arrayOfIds = userJson.map((obj) => obj.id);
+
+  const transaction = await transactionService.getWinLoseById(arrayOfIds);
+  console.log(transaction);
+
   let winSum = 0;
   let loseSum = 0;
 
@@ -174,7 +187,7 @@ const addCommision = async (req, res) => {
   });
   let total = (winSum + loseSum) * 0.005;
   if (total > 0) {
-    const newCredit = parseInt(getUser.credit) + parseInt(total);
+    const newCredit = parseInt(user.credit) + parseInt(total);
     const addCredit = await usersService.addCredit(newCredit, userId);
 
     if (addCredit) {
@@ -182,35 +195,32 @@ const addCommision = async (req, res) => {
         await transactionService.updateTransaction(x.id);
       }
     }
-    return res.status(200).json({
-      status: true,
-      message: "Add commision success",
-    });
+
+    const data = {
+      userId: userId,
+      unit: total,
+      event: "comission",
+      adminId: adminId,
+      isCancel: false,
+    };
+    console.log(data);
+    const createTransaction = await transactionService.createTransaction(data);
+    if (createTransaction) {
+      return res.status(200).json({
+        status: true,
+        message: "Add commision success",
+      });
+    }
+    // return res.status(200).json({
+    //   status: true,
+    //   message: "Add commision success",
+    // });
   } else {
     return res.status(200).json({
       status: false,
       message: "No commision",
     });
   }
-  // if (!userId || !commision) {
-  //   return res.status(400).json({
-  //     status: false,
-  //     message: "Please fill in all fields",
-  //   });
-  // } else {
-  //   const user = await usersService.addCommision(userId, commision);
-  //   if (!user) {
-  //     return res.status(400).json({
-  //       status: false,
-  //       message: "Please fill in all fields",
-  //     });
-  //   } else {
-  //     return res.status(200).json({
-  //       status: true,
-  //       message: "Add commision success",
-  //     });
-  //   }
-  // }
 };
 
 const manageCredit = async (req, res) => {

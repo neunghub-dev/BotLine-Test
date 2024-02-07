@@ -29,8 +29,18 @@ const hookMessageLine = async (req, res) => {
         const checkUser = await UserAdmin.checkUser(userId);
 
         try {
-          if (message === "link") {
+          if (
+            ((message === "link" || message === "Link") &&
+              groupId === undefined) ||
+            groupId === null
+          ) {
             await getLinkInvite(replyToken, userId, message, token, pn);
+          }
+          if (
+            (message === "เช็คชื่อ" && groupId === undefined) ||
+            groupId === null
+          ) {
+            await getUserById(replyToken, userId, token, pn);
           }
           // KeyWord Check Credit
           if (
@@ -387,7 +397,7 @@ const checkPok = (data) => {
     }
   }
 };
-const getLinkInvite = async (replyToken, userId, message, token,pn) => {
+const getLinkInvite = async (replyToken, userId, message, token, pn) => {
   const user = await usersService.checkuuid(userId);
 
   if (user) {
@@ -709,19 +719,50 @@ const convertPokTxt = (data) => {
 //   console.log(JSON.stringify(outputArray, null, 2));
 //   return outputArray;
 // }
+const getUserById = async (replyToken, userId, token, pn) => {
+  const user = await usersService.checkuuid(userId);
+  if (user) {
+    await BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: `ชื่อ: ${user.name}\nเบอร์: ${user.tel}\nId Line: ${
+          user.line_id
+        }\nเครดิต: ${user.credit.toLocaleString()}\nลิ้งค์เชิญเพื่อน: https://testfe.nuenghub-soft.online/?partner=${
+          pn.refCode
+        }&ref=${user.ref}`,
+      },
+      token
+    );
+  } else {
+    await BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: `ไม่พบข้อมูลผู้ใช้งาน`,
+      },
+      token
+    );
+  }
+};
 
 const checkCredit = async (replyToken, userId, groupId, token) => {
-  const val = await usersService.getCreaditByuserId(userId);
-  const credit = val.credit;
+  try {
+    const val = await usersService.getCreaditByuserId(userId);
+    const credit = val.credit;
 
-  const user = await BotEvent.getProfileInGroupById(groupId, userId, token);
-  const data = {
-    name: user.data.displayName,
-    replyToken: replyToken,
-    credit: credit.toLocaleString(),
-  };
+    const user = await BotEvent.getProfileInGroupById(groupId, userId, token);
+    const data = {
+      name: user.data.displayName,
+      replyToken: replyToken,
+      credit: credit.toLocaleString(),
+    };
 
-  await BotEvent.getCreadit(data, token);
+    await BotEvent.getCreadit(data, token);
+  } catch (error) {
+    console.log(error);
+    return;
+  }
 };
 
 const openRound = async (replyToken, userId, groupId, token) => {

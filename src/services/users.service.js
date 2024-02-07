@@ -146,7 +146,17 @@ const checkRef = async (ref) => {
   });
   return user;
 };
+const getIdByInvite = async (id) => {
+  const user = await users.findAll({
+    attributes: ["id"],
+    where: {
+      invite_id: id,
+    },
+  });
+  return user;
+};
 module.exports = {
+  getIdByInvite,
   register,
   getCreadit,
   addCredit,

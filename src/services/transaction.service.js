@@ -14,14 +14,24 @@ const getAllTransactionNoCancel = async (id) => {
   if (id === undefined || id === 0) {
     tc = await transaction.findAll({
       where: {
-        [Op.or]: [{ event: "withdraw" }, { event: "add" }, { event: "bonus" }],
+        [Op.or]: [
+          { event: "withdraw" },
+          { event: "add" },
+          { event: "bonus" },
+          { event: "comission" },
+        ],
       },
     });
   } else {
     tc = await transaction.findAll({
       where: {
         partner_id: id,
-        [Op.or]: [{ event: "withdraw" }, { event: "add" }, { event: "bonus" }],
+        [Op.or]: [
+          { event: "withdraw" },
+          { event: "add" },
+          { event: "bonus" },
+          { event: "comission" },
+        ],
       },
     });
   }
@@ -34,7 +44,12 @@ const getAllTransaction = async (id) => {
   const tc = await transaction.findAll({
     where: {
       isCancel: false,
-      [Op.or]: [{ event: "withdraw" }, { event: "add" }, { event: "bonus" }],
+      [Op.or]: [
+        { event: "withdraw" },
+        { event: "add" },
+        { event: "bonus" },
+        { event: "comission" },
+      ],
     },
   });
   return tc;
