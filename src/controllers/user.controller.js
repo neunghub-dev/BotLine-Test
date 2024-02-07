@@ -8,9 +8,8 @@ const getAlluser = async (req, res) => {
     let user = [];
     const pdId = req.partnerId;
     const { keyword } = req.query;
-    console.log(keyword);
+
     if (keyword) {
-      console.log("keyword");
       user = await usersService.getAlluser(keyword, pdId);
       if (!user) {
         return res.status(200).json({
@@ -19,7 +18,6 @@ const getAlluser = async (req, res) => {
         });
       }
     } else {
-      console.log("no keyword");
       user = await usersService.getAlluser(undefined, pdId);
       // return res.status(200).json({
       //   status: true,
@@ -40,7 +38,7 @@ const getAlluser = async (req, res) => {
     }));
     const tc = await transactionService.getWinLose();
     const allTransaction = await transactionService.getAllTransaction();
-    console.log(allTransaction);
+
     const bonus = [];
     const credit = [];
 
@@ -112,7 +110,7 @@ const getAlluser = async (req, res) => {
       }
     });
     newData.forEach((user) => {
-      const userIndex = bonus.findIndex((u) => u.userId === user.id);
+      const userIndex = bonus.findIndex((u) => u.userId === user.invite_id);
       const userIndex2 = credit.findIndex((u) => u.userId === user.id);
 
       if (userIndex2 !== -1) {
@@ -157,7 +155,11 @@ const getAlluser = async (req, res) => {
 };
 const addCommision = async (req, res) => {
   const { userId, commision } = req.body;
-  const transaction = await transactionService.getWinLoseById(userId);
+  const getUser = await usersService.getUserById(userId);
+  console.log(getUser.invite_id);
+  const transaction = await transactionService.getWinLoseById(
+    getUser.invite_id
+  );
   let winSum = 0;
   let loseSum = 0;
 
@@ -172,7 +174,6 @@ const addCommision = async (req, res) => {
   });
   let total = (winSum + loseSum) * 0.005;
   if (total > 0) {
-    const getUser = await usersService.getCreadit(userId);
     const newCredit = parseInt(getUser.credit) + parseInt(total);
     const addCredit = await usersService.addCredit(newCredit, userId);
 
@@ -342,8 +343,16 @@ const createUser = async (req, res) => {
         message: "You don't have permission",
       });
     }
-    const { username, password, name, role, tel, partner_id } = req.body;
-    if (!username || !password || !name || !role || !tel || !partner_id) {
+    const { username, password, name, role, tel, partner_id, ref } = req.body;
+    if (
+      !username ||
+      !password ||
+      !name ||
+      !role ||
+      !tel ||
+      !partner_id ||
+      !ref
+    ) {
       return res.status(400).json({
         status: false,
         message: "Please fill in all fields",
@@ -365,6 +374,7 @@ const createUser = async (req, res) => {
           username: username,
           password: hashedPassword,
           partner_id: partner_id,
+          ref: ref,
         };
         const createUser = await adminService.createUser(data);
         if (!createUser) {

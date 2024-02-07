@@ -16,21 +16,22 @@ const crypto = require("crypto");
 const hookMessageLine = async (req, res) => {
   try {
     if (req.body.events.length !== 0) {
+      console.log(JSON.stringify(req.body, null, 2));
       let destination = req.body.destination;
       const pn = await partnerService.getPartnerByDestination(destination);
       let token = pn.token;
       if (req.body.events[0].message.type === "text") {
         const message = req.body.events[0].message.text;
-        if (message === "link") {
-          await getLinkInvite(replyToken, userId, message, token);
-        }
-        return;
+
         const replyToken = req.body.events[0].replyToken;
         const userId = req.body.events[0].source.userId;
         const groupId = req.body.events[0].source.groupId;
         const checkUser = await UserAdmin.checkUser(userId);
 
         try {
+          if (message === "link") {
+            await getLinkInvite(replyToken, userId, message, token, pn);
+          }
           // KeyWord Check Credit
           if (
             message === "เช็คยอด" ||
@@ -386,7 +387,29 @@ const checkPok = (data) => {
     }
   }
 };
-const getLinkInvite = (replyToken, userId, message, token) => {};
+const getLinkInvite = async (replyToken, userId, message, token,pn) => {
+  const user = await usersService.checkuuid(userId);
+
+  if (user) {
+    await BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: `https://testfe.nuenghub-soft.online/?partner=${pn.refCode}&ref=${user.ref}`,
+      },
+      token
+    );
+  } else {
+    await BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: `ไม่พบข้อมูลผู้ใช้งาน`,
+      },
+      token
+    );
+  }
+};
 const encryptSymmetric = (data, key) => {
   const cipher = crypto.createCipher("aes-256-cbc", key);
   let ciphertext = cipher.update(plaintext, "utf-8", "base64");

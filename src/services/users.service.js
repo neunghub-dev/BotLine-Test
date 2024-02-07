@@ -122,10 +122,26 @@ const updateCreditById = async (credit, id) => {
   );
   return user;
 };
+const getUserById = async (id) => {
+  const user = await users.findOne({
+    where: {
+      id: id,
+    },
+  });
+  return user;
+};
 const checkuuid = async (uuid) => {
   const user = await users.findOne({
     where: {
       uuid_line: uuid,
+    },
+  });
+  return user;
+};
+const checkRef = async (ref) => {
+  const user = await users.findOne({
+    where: {
+      ref: ref,
     },
   });
   return user;
@@ -139,5 +155,7 @@ module.exports = {
   getIdByUUid,
   getAlluser,
   checkuuid,
+  checkRef,
+  getUserById,
   updateCreditById,
 };

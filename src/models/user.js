@@ -20,7 +20,8 @@ module.exports = (sequelize, DataTypes) => {
       credit: DataTypes.INTEGER,
       bonus: DataTypes.INTEGER,
       partner_id: DataTypes.INTEGER,
-      recommend: DataTypes.STRING,
+      ref: DataTypes.STRING,
+      invite_id: DataTypes.INTEGER,
     },
     {
       sequelize,
