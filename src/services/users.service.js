@@ -3,8 +3,6 @@ const users = db.Users;
 const Op = db.Sequelize.Op;
 
 const getAlluser = async (keyword, partner_id) => {
-  console.log("keyword", keyword);
-  console.log("partner_id", partner_id);
   let user = [];
   // let whereClause = {};
   if (partner_id !== undefined && partner_id !== 0) {
@@ -155,7 +153,17 @@ const getIdByInvite = async (id) => {
   });
   return user;
 };
+
+const updateInfo = async (data, id) => {
+  const user = await users.update(data, {
+    where: {
+      id: id,
+    },
+  });
+  return user;
+};
 module.exports = {
+  updateInfo,
   getIdByInvite,
   register,
   getCreadit,
