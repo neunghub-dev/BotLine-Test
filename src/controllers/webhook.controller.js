@@ -312,9 +312,9 @@ const hookMessageLine = async (req, res) => {
                 {
                   type: "image",
                   originalContentUrl:
-                    "https://testapi.nuenghub-soft.online/img/w13.png",
+                    "https://hookpdk.pd789.co/img/w13.png",
                   previewImageUrl:
-                    "https://testapi.nuenghub-soft.online/img/w13.png",
+                    "https://hookpdk.pd789.co/img/w13.png",
                 },
                 token
               );
@@ -817,8 +817,8 @@ const closeRound = async (replyToken, userId, groupId, token) => {
       replyToken,
       {
         type: "image",
-        originalContentUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
-        previewImageUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
+        originalContentUrl: "https://hookpdk.pd789.co/img/w13.png",
+        previewImageUrl: "https://hookpdk.pd789.co/img/w13.png",
       },
       token
     );
@@ -924,8 +924,8 @@ const closeRound = async (replyToken, userId, groupId, token) => {
         [
           {
             type: "image",
-            originalContentUrl: "https://testapi.nuenghub-soft.online/img/w11.png",
-            previewImageUrl: "https://testapi.nuenghub-soft.online/img/w11.png",
+            originalContentUrl: "https://hookpdk.pd789.co/img/w11.png",
+            previewImageUrl: "https://hookpdk.pd789.co/img/w11.png",
           },
           allData,
         ],
@@ -949,8 +949,8 @@ const cancelRound = async (replyToken, userId, groupId, token) => {
       replyToken,
       {
         type: "image",
-        originalContentUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
-        previewImageUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
+        originalContentUrl: "https://hookpdk.pd789.co/img/w13.png",
+        previewImageUrl: "https://hookpdk.pd789.co/img/w13.png",
       },
       token
     );
@@ -1959,8 +1959,8 @@ const playPok = async (replyToken, userId, groupId, message, token) => {
           replyToken,
           {
             type: "image",
-            originalContentUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
-            previewImageUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
+            originalContentUrl: "https://hookpdk.pd789.co/img/w13.png",
+            previewImageUrl: "https://hookpdk.pd789.co/img/w13.png",
           },
           token
         );
