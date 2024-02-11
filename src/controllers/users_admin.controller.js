@@ -2,7 +2,45 @@
 const partnerService = require("../services/partner.service");
 const usersAdminService = require("../services/users_admin.service");
 const jwt = require("jsonwebtoken");
+const BotEvent = require("../helper/BotEvent");
 const axios = require("axios");
+
+const getAllUser = async (req, res) => {
+  try {
+    const user = await usersAdminService.getAllUserAdmin();
+
+    return res.status(200).json({
+      status: true,
+      message: "Get all user success",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: false,
+      message: "Get all user fail",
+      data: error,
+    });
+  }
+};
+
+const destroyUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await usersAdminService.destroyUserAdmin(id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Delete user success",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: false,
+      message: "Delete user fail",
+      data: error,
+    });
+  }
+};
 
 const adduserAdmin = async (req, res) => {
   const { refCode, code, state } = req.query;
@@ -40,12 +78,13 @@ const adduserAdmin = async (req, res) => {
 
       // Decode JWT
       const decoded = jwt.decode(token);
+      console.log(decoded);
       const sub = decoded.sub;
       const user = await usersAdminService.checkUser(sub);
-      console.log(user);
 
       if (!user) {
         const data = {
+          name: decoded.name,
           uuid: sub,
           partner_id: partner.id,
         };
@@ -83,5 +122,7 @@ const adduserAdmin = async (req, res) => {
 };
 
 module.exports = {
+  getAllUser,
+  destroyUser,
   adduserAdmin,
 };

@@ -15,7 +15,7 @@ const checkCredit = (data) => {
         contents: [
           {
             type: "image",
-            url: "https://hook.nuenghub-soft.online/img/pic1234.jpeg",
+            url: "https://testapi.nuenghub-soft.online/img/pic1234.jpeg",
             margin: "none",
             align: "center",
             gravity: "center",
@@ -75,7 +75,7 @@ const startRound = (data) => {
         contents: [
           {
             type: "image",
-            url: "https://hook.nuenghub-soft.online/img/w12.png",
+            url: "https://testapi.nuenghub-soft.online/img/w12.png",
             size: "full",
             aspectRatio: "20:13",
             aspectMode: "cover",

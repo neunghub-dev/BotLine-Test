@@ -52,7 +52,6 @@ const register = async (data) => {
 
 const getCreadit = async (id) => {
   const user = await users.findOne({
-    attributes: ["credit"],
     where: {
       id: id,
     },

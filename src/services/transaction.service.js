@@ -39,6 +39,17 @@ const getAllTransactionNoCancel = async (id) => {
   return tc;
 };
 
+const getWinLoseCom = async (id) => {
+  const tc = await transaction.findAll({
+    where: {
+      isCancel: false,
+      isComission: true,
+      [Op.or]: [{ event: "win" }, { event: "lose" }],
+    },
+  });
+  return tc;
+};
+
 //type add and withdraw
 const getAllTransaction = async (id) => {
   const tc = await transaction.findAll({
@@ -60,6 +71,7 @@ const getWinLose = async (id) => {
   const tc = await transaction.findAll({
     where: {
       isCancel: false,
+      isComission: false,
       [Op.or]: [{ event: "win" }, { event: "lose" }],
     },
   });
@@ -90,7 +102,7 @@ const getTrasactionByRounndId = async (id) => {
 //update cancel transaction
 const updateTransaction = async (id) => {
   const tc = await transaction.update(
-    { isCancel: true },
+    { isComission: true },
     {
       where: {
         id: id,
@@ -99,7 +111,57 @@ const updateTransaction = async (id) => {
   );
   return tc;
 };
+
+const getAllByDate = async (start, end, id) => {
+  // Constructing the query
+  let transactions = [];
+  if (id === undefined || id === "0") {
+    transactions = await transaction.findAll({
+      attributes: [
+        "event",
+        [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
+        "date",
+      ],
+      where: {
+        [Op.or]: [
+          { event: "withdraw" },
+          { event: "add" },
+          { event: "bonus" },
+          { event: "comission" },
+        ],
+        createdAt: {
+          [Op.between]: [start, end],
+        },
+      },
+      group: ["event", "date"],
+    });
+  } else {
+    transactions = await transaction.findAll({
+      attributes: [
+        "event",
+        [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
+        "date",
+      ],
+      where: {
+        [Op.or]: [
+          { event: "withdraw" },
+          { event: "add" },
+          { event: "bonus" },
+          { event: "comission" },
+        ],
+        createdAt: {
+          [Op.between]: [start, end],
+        },
+        partner_id: parseInt(id),
+      },
+      group: ["event", "date"],
+    });
+  }
+
+  return transactions;
+};
 module.exports = {
+  getAllByDate,
   getWinLoseById,
   getAllTransactionNoCancel,
   getTrasactionByRounndId,
@@ -107,4 +169,5 @@ module.exports = {
   getWinLose,
   createTransaction,
   getAllTransaction,
+  getWinLoseCom,
 };

@@ -35,13 +35,19 @@ const getAlluser = async (req, res) => {
       lose: 0,
       commision: 0,
       total: 0,
+      allWin: 0,
+      allLose: 0,
+      allCommision: 0,
     }));
 
     const tc = await transactionService.getWinLose();
+    const tcm = await transactionService.getWinLoseCom();
+    console.log(tcm);
     const allTransaction = await transactionService.getAllTransaction();
 
     const bonus = [];
     const credit = [];
+    const ttcom = [];
 
     allTransaction.forEach((event) => {
       const userIndex = credit.findIndex((u) => u.userId === event.userId);
@@ -106,6 +112,41 @@ const getAlluser = async (req, res) => {
         }
       }
     }
+    for (let event of tcm) {
+      const userIndex = ttcom.findIndex((u) => u.userId === event.userId);
+      console.log(userIndex);
+      if (userIndex === -1) {
+        const user = await usersService.getUserById(event.userId);
+        console.log(user);
+        // User not found, create a new user entry
+        ttcom.push({
+          userId: event.userId,
+          invite_id: user.invite_id,
+          data: [
+            {
+              event: event.event,
+              unit: event.unit,
+            },
+          ],
+        });
+      } else {
+        // User found, update the existing entry
+        const eventData = ttcom[userIndex].data.find(
+          (d) => d.event === event.event
+        );
+        if (eventData) {
+          // Event type found, update the units
+          eventData.unit += event.unit;
+        } else {
+          // Event type not found, create a new entry for the event
+          ttcom[userIndex].data.push({
+            event: event.event,
+            unit: event.unit,
+          });
+        }
+      }
+    }
+    console.log(JSON.stringify(ttcom, null, 2));
     newData.forEach((user) => {
       const userIndex2 = credit.findIndex((u) => u.userId === user.id);
 
@@ -121,6 +162,7 @@ const getAlluser = async (req, res) => {
         user.bonus = bonus + comission;
         user.add = add;
         user.withdraw = withdraw;
+        user.credit = user.credit + user.bonus;
       }
       let win = 0;
       let lose = 0;
@@ -135,10 +177,27 @@ const getAlluser = async (req, res) => {
           });
         }
       });
+      let allWin = 0;
+      let allLose = 0;
+      ttcom.forEach((event) => {
+        if (event.invite_id === user.id) {
+          event.data.forEach((event) => {
+            if (event.event === "win") {
+              allWin += event.unit;
+            } else if (event.event === "lose") {
+              allLose += event.unit;
+            }
+          });
+        }
+      });
       console.log("-----------");
       console.log(win);
       console.log(lose);
       console.log("-----------");
+      const total = allWin + allLose;
+      user.allWin = allWin;
+      user.allLose = allLose;
+      user.allCommision = total <= 0 ? 0 : total * 0.005;
       user.win = win;
       user.lose = lose;
     });
@@ -195,13 +254,16 @@ const addCommision = async (req, res) => {
         await transactionService.updateTransaction(x.id);
       }
     }
-
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
     const data = {
       userId: userId,
       unit: total,
       event: "comission",
       adminId: adminId,
       isCancel: false,
+      partner_id: user.partner_id,
+      date: startDate,
     };
     console.log(data);
     const createTransaction = await transactionService.createTransaction(data);
@@ -225,6 +287,9 @@ const addCommision = async (req, res) => {
 
 const manageCredit = async (req, res) => {
   try {
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
     const adminId = req.userId;
     const userId = req.params.id;
     const { event, credit } = req.body;
@@ -256,6 +321,8 @@ const manageCredit = async (req, res) => {
               event: "add",
               adminId: adminId,
               isCancel: false,
+              partner_id: getUser.partner_id,
+              date: currentDate,
             };
             const createTransaction =
               await transactionService.createTransaction(data);
@@ -292,6 +359,8 @@ const manageCredit = async (req, res) => {
                 event: "withdraw",
                 adminId: adminId,
                 isCancel: false,
+                partner_id: getUser.partner_id,
+                date: currentDate,
               };
               const createTransaction =
                 await transactionService.createTransaction(data);
@@ -323,6 +392,8 @@ const manageCredit = async (req, res) => {
               event: "bonus",
               adminId: adminId,
               isCancel: false,
+              partner_id: getUser.partner_id,
+              date: currentDate,
             };
             const createTransaction =
               await transactionService.createTransaction(data);
@@ -341,7 +412,9 @@ const manageCredit = async (req, res) => {
         }
       }
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const createUser = async (req, res) => {
@@ -413,7 +486,48 @@ const getAllAdmin = async (req, res) => {
     console.log(error);
   }
 };
+
+const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { name, tel, line_id, invite_id } = req.body;
+    if (!userId || !name || !tel || !line_id || !invite_id) {
+      return res.status(400).json({
+        status: false,
+        message: "Please fill in all fields",
+      });
+    } else {
+      const iv = invite_id.toString();
+      const us = userId.toString();
+      if (iv === us) {
+        return res.status(400).json({
+          status: false,
+          message: "Invite id can't be same as user id",
+        });
+      }
+      const data = {
+        name: name,
+        tel: tel,
+        line_id: line_id,
+        invite_id: invite_id,
+      };
+      const updateUser = await usersService.updateInfo(data, userId);
+      if (!updateUser) {
+        return res.status(400).json({
+          status: false,
+          message: "Please fill in all fields",
+        });
+      } else {
+        return res.status(200).json({
+          status: true,
+          message: "Update user success",
+        });
+      }
+    }
+  } catch (error) {}
+};
 module.exports = {
+  updateUser,
   manageCredit,
   getAlluser,
   createUser,

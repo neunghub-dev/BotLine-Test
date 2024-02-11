@@ -37,7 +37,11 @@ const hookMessageLine = async (req, res) => {
             await getLinkInvite(replyToken, userId, message, token, pn);
           }
           if (
-            (message === "เช็คชื่อ" && groupId === undefined) ||
+            ((message === "เช็คชื่อ" ||
+              message === "id" ||
+              message === "Id" ||
+              message === "ID") &&
+              groupId === undefined) ||
             groupId === null
           ) {
             await getUserById(replyToken, userId, token, pn);
@@ -75,7 +79,7 @@ const hookMessageLine = async (req, res) => {
           ) {
             await sentResult(replyToken, userId, groupId, message, token);
           } else if (message === "cf" || message === "Cf" || message === "CF") {
-            await confirmRound(replyToken, userId, groupId, token);
+            await confirmRound(replyToken, userId, groupId, token, pn);
           } else if (message === "ccf") {
             const isRound = await roundService.getRoundIdinProgress(groupId);
             // check round in progress
@@ -308,9 +312,9 @@ const hookMessageLine = async (req, res) => {
                 {
                   type: "image",
                   originalContentUrl:
-                    "https://hook.nuenghub-soft.online/img/w13.png",
+                    "https://testapi.nuenghub-soft.online/img/w13.png",
                   previewImageUrl:
-                    "https://hook.nuenghub-soft.online/img/w13.png",
+                    "https://testapi.nuenghub-soft.online/img/w13.png",
                 },
                 token
               );
@@ -813,8 +817,8 @@ const closeRound = async (replyToken, userId, groupId, token) => {
       replyToken,
       {
         type: "image",
-        originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-        previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
+        originalContentUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
+        previewImageUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
       },
       token
     );
@@ -920,8 +924,8 @@ const closeRound = async (replyToken, userId, groupId, token) => {
         [
           {
             type: "image",
-            originalContentUrl: "https://hook.nuenghub-soft.online/img/w11.png",
-            previewImageUrl: "https://hook.nuenghub-soft.online/img/w11.png",
+            originalContentUrl: "https://testapi.nuenghub-soft.online/img/w11.png",
+            previewImageUrl: "https://testapi.nuenghub-soft.online/img/w11.png",
           },
           allData,
         ],
@@ -945,8 +949,8 @@ const cancelRound = async (replyToken, userId, groupId, token) => {
       replyToken,
       {
         type: "image",
-        originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-        previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
+        originalContentUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
+        previewImageUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
       },
       token
     );
@@ -1424,7 +1428,7 @@ const calculateResult = async (data, result, token) => {
   }
   return dataPlayer;
 };
-const confirmRound = async (replyToken, userId, groupId, token) => {
+const confirmRound = async (replyToken, userId, groupId, token, pn) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
   const result = [
     `s${round.k0}`,
@@ -1499,6 +1503,8 @@ const confirmRound = async (replyToken, userId, groupId, token) => {
     for (const item of dataSort[2]) {
       const total = item.totalIncome - item.totalBroken;
       if (total !== 0) {
+        const startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
         const transactionData = {
           event: total < 0 ? "lose" : "win",
           unit: total < 0 ? Math.abs(total) : total,
@@ -1506,6 +1512,9 @@ const confirmRound = async (replyToken, userId, groupId, token) => {
           adminId: 2,
           roundId: round.id,
           isCancel: false,
+          date: startDate,
+          partner_id: pn.id,
+          isComission: false,
         };
 
         await transactionService.createTransaction(transactionData);
@@ -1950,8 +1959,8 @@ const playPok = async (replyToken, userId, groupId, message, token) => {
           replyToken,
           {
             type: "image",
-            originalContentUrl: "https://hook.nuenghub-soft.online/img/w13.png",
-            previewImageUrl: "https://hook.nuenghub-soft.online/img/w13.png",
+            originalContentUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
+            previewImageUrl: "https://testapi.nuenghub-soft.online/img/w13.png",
           },
           token
         );

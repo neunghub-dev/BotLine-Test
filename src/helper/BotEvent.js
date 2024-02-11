@@ -70,8 +70,21 @@ const getProfileInGroupById = async (groupId, userId, token) => {
     console.error(error);
   }
 };
+const getProfile = async (userId, token) => {
+  try {
+    return await axios.get(`https://api.line.me/v2/bot/profile/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    return; // Handle the error as needed
+    console.error(error);
+  }
+};
 module.exports = {
   showResultClose,
+  getProfile,
   getProfileInGroupById,
   getCreadit,
   openRound,

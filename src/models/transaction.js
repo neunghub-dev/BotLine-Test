@@ -16,12 +16,14 @@ module.exports = (sequelize, DataTypes) => {
   transaction.init(
     {
       event: DataTypes.STRING,
-      unit: DataTypes.INTEGER,
+      unit: DataTypes.DOUBLE,
       userId: DataTypes.INTEGER,
       adminId: DataTypes.INTEGER,
       isCancel: DataTypes.BOOLEAN,
+      isComission: DataTypes.BOOLEAN,
       roundId: DataTypes.INTEGER,
       partner_id: DataTypes.INTEGER,
+      date : DataTypes.DATE
     },
     {
       sequelize,

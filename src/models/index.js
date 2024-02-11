@@ -11,18 +11,24 @@ const config = require(__dirname + "/../config/config.js")[env];
 // const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 let sequelize;
-console.log(require(__dirname + "/../config/config.js"))
+console.log(require(__dirname + "/../config/config.js"));
 console.log(env);
 console.log(config);
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
-  sequelize = new Sequelize(
+  (sequelize = new Sequelize(
     config.database,
     config.username,
     config.password,
     config
-  );
+  )),
+    {
+      dialectOptions: {
+        useUTC: true, //for reading from database
+      },
+      timezone: "+07:00", //for writing to database
+    };
 }
 
 fs.readdirSync(__dirname)

@@ -22,7 +22,7 @@ router.patch(
 );
 
 router.get("/user", [authJwt.verifyToken], usersController.getAlluser);
-
+router.patch("/user/:id", [authJwt.verifyToken], usersController.updateUser);
 router.post("/auth/login", authController.login);
 router.post("/user", [authJwt.verifyToken], usersController.createUser);
 router.get("/admin", [authJwt.verifyToken], usersController.getAllAdmin);
@@ -35,13 +35,19 @@ router.get(
   transactionController.getAllTransaction
 );
 router.get(
+  "/transaction/date",
+  [authJwt.verifyToken],
+  transactionController.getAllTransactionByDate
+);
+router.get(
   "/transaction/:id",
   [authJwt.verifyToken],
   transactionController.getAllTransactionByPartner
 );
 router.get("/partner", partnerController.getAllPartners);
 router.get("/partners", partnerController.getPartnerByRefCode);
-
+router.get("/useradmin", userAdminController.getAllUser);
+router.delete("/useradmin/:id", userAdminController.destroyUser);
 router.put("/users/commision", usersController.addCommision);
 
 module.exports = router;
