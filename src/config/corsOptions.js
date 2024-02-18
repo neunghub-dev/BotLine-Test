@@ -9,12 +9,12 @@ const whitelist = [
   "https://fe.nuenghub-soft.online",
   "http://localhost:3008",
   "http://localhost:3009",
-  "https://pdk.pd789.co",
-  "https://hookpdk.pd789.co",
-  "https://backpdk.pd789.co",
-  "http://pdk.pd789.co",
-  "http://hookpdk.pd789.co",
-  "http://backpdk.pd789.co",
+  "https://pd.pd789.co",
+  "https://hookpd.pd789.co",
+  "https://backpd.pd789.co",
+  "http://pd.pd789.co",
+  "http://hookpd.pd789.co",
+  "http://backpd.pd789.co",
 ];
 const corsOptions = {
   origin: (origin, callback) => {

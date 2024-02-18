@@ -134,6 +134,7 @@ const getAllByDate = async (start, end, id) => {
         },
       },
       group: ["event", "date"],
+      order: [["date", "DESC"]],
     });
   } else {
     transactions = await transaction.findAll({
@@ -155,6 +156,7 @@ const getAllByDate = async (start, end, id) => {
         partner_id: parseInt(id),
       },
       group: ["event", "date"],
+      order: [["date", "DESC"]],
     });
   }
 

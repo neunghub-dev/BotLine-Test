@@ -311,10 +311,8 @@ const hookMessageLine = async (req, res) => {
                 replyToken,
                 {
                   type: "image",
-                  originalContentUrl:
-                    "https://hookpdk.pd789.co/img/w13.png",
-                  previewImageUrl:
-                    "https://hookpdk.pd789.co/img/w13.png",
+                  originalContentUrl: "https://hookpd.pd789.co/img/w13.png",
+                  previewImageUrl: "https://hookpd.pd789.co/img/w13.png",
                 },
                 token
               );
@@ -817,8 +815,8 @@ const closeRound = async (replyToken, userId, groupId, token) => {
       replyToken,
       {
         type: "image",
-        originalContentUrl: "https://hookpdk.pd789.co/img/w13.png",
-        previewImageUrl: "https://hookpdk.pd789.co/img/w13.png",
+        originalContentUrl: "https://hookpd.pd789.co/img/w13.png",
+        previewImageUrl: "https://hookpd.pd789.co/img/w13.png",
       },
       token
     );
@@ -834,7 +832,23 @@ const closeRound = async (replyToken, userId, groupId, token) => {
       const detail = await roundService.getAllRoundDetailByRoundId(round.id);
       const json = JSON.stringify(detail);
       const detailItem = JSON.parse(json);
-      console.log(detailItem);
+      if (detailItem.length === 0) {
+        return await BotEvent.replyMessage(
+          replyToken,
+          [
+            {
+              type: "image",
+              originalContentUrl: "https://hookpd.pd789.co/img/w11.png",
+              previewImageUrl: "https://hookpd.pd789.co/img/w11.png",
+            },
+            {
+              type: "text",
+              text: "ไม่มีผู้เล่นในรอบนี้",
+            },
+          ],
+          token
+        );
+      }
       const dataSort = await sortResult(
         detailItem,
         null,
@@ -924,8 +938,8 @@ const closeRound = async (replyToken, userId, groupId, token) => {
         [
           {
             type: "image",
-            originalContentUrl: "https://hookpdk.pd789.co/img/w11.png",
-            previewImageUrl: "https://hookpdk.pd789.co/img/w11.png",
+            originalContentUrl: "https://hookpd.pd789.co/img/w11.png",
+            previewImageUrl: "https://hookpd.pd789.co/img/w11.png",
           },
           allData,
         ],
@@ -949,8 +963,8 @@ const cancelRound = async (replyToken, userId, groupId, token) => {
       replyToken,
       {
         type: "image",
-        originalContentUrl: "https://hookpdk.pd789.co/img/w13.png",
-        previewImageUrl: "https://hookpdk.pd789.co/img/w13.png",
+        originalContentUrl: "https://hookpd.pd789.co/img/w13.png",
+        previewImageUrl: "https://hookpd.pd789.co/img/w13.png",
       },
       token
     );
@@ -1023,7 +1037,60 @@ const sentResult = async (replyToken, userId, groupId, message, token) => {
     const detail = await roundService.getAllRoundDetailByRoundId(round.id);
     const json = JSON.stringify(detail);
     const detailItem = JSON.parse(json);
-    console.log(detailItem);
+    if (detailItem.length === 0) {
+      const transformedData = transformedSequence.map((item) => ({
+        textNumber: item.textNumber,
+        nameTxt: item.nameTxt,
+        name: item.name,
+        number: item.number,
+        convertNumber: item.convertNumber,
+        isLeader: item.name === "k0",
+        color: "",
+        status: "",
+        isPok: checkPok(item),
+      }));
+
+      for (const item of transformedData) {
+        if (!item.isLeader) {
+          if (
+            parseFloat(item.number.slice(1)) >
+            parseFloat(transformedData[0].number.split("s")[1].slice(1))
+          ) {
+            item.status = "winner";
+          } else if (
+            parseFloat(item.number.slice(1)) ===
+            parseFloat(transformedData[0].number.split("s")[1].slice(1))
+          ) {
+            item.status = "draw";
+          } else {
+            item.status = "loser";
+          }
+        } else {
+          continue;
+        }
+      }
+      const dataTotal = [];
+      transformedData.forEach((e) => {
+        dataTotal.push({
+          number: e.name === "k0" ? e.number.split("s")[1] : e.number,
+        });
+      });
+      const saveResult = await roundService.updateKa(round.id, dataTotal);
+      if (saveResult) {
+        return await BotEvent.showResultNotPlayer(
+          replyToken,
+          [
+            transformedData,
+            {
+              type: "text",
+              text: "ไม่มีผู้เล่นในรอบนี้",
+            },
+          ],
+          round.round,
+          token
+        );
+      }
+    }
     const transformedData = transformedSequence.map((item) => ({
       textNumber: item.textNumber,
       nameTxt: item.nameTxt,
@@ -1119,6 +1186,8 @@ const sortResult = async (
   groupId,
   token
 ) => {
+  if (res.length === 0) {
+  }
   const groupedData = res.reduce((result, item) => {
     const key = `${item.userId}`;
     if (!result[key]) {
@@ -1959,8 +2028,8 @@ const playPok = async (replyToken, userId, groupId, message, token) => {
           replyToken,
           {
             type: "image",
-            originalContentUrl: "https://hookpdk.pd789.co/img/w13.png",
-            previewImageUrl: "https://hookpdk.pd789.co/img/w13.png",
+            originalContentUrl: "https://hookpd.pd789.co/img/w13.png",
+            previewImageUrl: "https://hookpd.pd789.co/img/w13.png",
           },
           token
         );

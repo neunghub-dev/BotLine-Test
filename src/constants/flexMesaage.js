@@ -15,7 +15,7 @@ const checkCredit = (data) => {
         contents: [
           {
             type: "image",
-            url: "https://hookpdk.pd789.co/img/pic1234.jpeg",
+            url: "https://hookpd.pd789.co/img/red.png",
             margin: "none",
             align: "center",
             gravity: "center",
@@ -75,7 +75,7 @@ const startRound = (data) => {
         contents: [
           {
             type: "image",
-            url: "https://hookpdk.pd789.co/img/w12.png",
+            url: "https://hookpd.pd789.co/img/w12.png",
             size: "full",
             aspectRatio: "20:13",
             aspectMode: "cover",

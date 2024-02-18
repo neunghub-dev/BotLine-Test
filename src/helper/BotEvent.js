@@ -9,7 +9,13 @@ const openRound = async (data, token) => {
 const getCreadit = async (data, token) => {
   await replyMessage(data.replyToken, flex.checkCredit(data), token);
 };
-
+const showResultNotPlayer = async (replyToken, data, round, token) => {
+  await replyMessage(
+    replyToken,
+    [flex.showResult(data[0], round), data[1]],
+    token
+  );
+};
 const showResult = async (replyToken, data, round, token) => {
   await replyMessage(
     replyToken,
@@ -83,6 +89,7 @@ const getProfile = async (userId, token) => {
   }
 };
 module.exports = {
+  showResultNotPlayer,
   showResultClose,
   getProfile,
   getProfileInGroupById,

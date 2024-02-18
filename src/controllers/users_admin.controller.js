@@ -47,7 +47,7 @@ const adduserAdmin = async (req, res) => {
   if (refCode !== undefined) {
     const partner = await partnerService.getPartnerByRefCode(refCode);
     res.redirect(
-      `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${partner.client_id}&redirect_uri=https://hookpdk.pd789.co/api/v1/user/invite&state=${partner.refCode}&scope=profile%20openid&nonce=09876xyz`
+      `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${partner.client_id}&redirect_uri=https://hookpd.pd789.co/api/v1/user/invite&state=${partner.refCode}&scope=profile%20openid&nonce=09876xyz`
     );
   }
   if (code !== undefined) {
@@ -58,7 +58,7 @@ const adduserAdmin = async (req, res) => {
       grant_type: "authorization_code",
       code: code,
       client_id: partner.client_id,
-      redirect_uri: "https://hookpdk.pd789.co/api/v1/user/invite",
+      redirect_uri: "https://hookpd.pd789.co/api/v1/user/invite",
       client_secret: partner.channel_secret,
     });
 
