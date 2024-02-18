@@ -407,7 +407,7 @@ const getLinkInvite = async (replyToken, userId, message, token, pn) => {
       replyToken,
       {
         type: "text",
-        text: `https://testfe.nuenghub-soft.online/?partner=${pn.refCode}&ref=${user.ref}`,
+        text: `https://pd.pd789.co/?partner=${pn.refCode}&ref=${user.ref}`,
       },
       token
     );
@@ -730,7 +730,7 @@ const getUserById = async (replyToken, userId, token, pn) => {
         type: "text",
         text: `ชื่อ: ${user.name}\nเบอร์: ${user.tel}\nId Line: ${
           user.line_id
-        }\nเครดิต: ${user.credit.toLocaleString()}\nลิ้งค์เชิญเพื่อน: https://testfe.nuenghub-soft.online/?partner=${
+        }\nเครดิต: ${user.credit.toLocaleString()}\nลิ้งค์เชิญเพื่อน: https://pd.pd789.co/?partner=${
           pn.refCode
         }&ref=${user.ref}`,
       },

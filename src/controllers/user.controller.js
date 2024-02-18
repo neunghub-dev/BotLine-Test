@@ -426,16 +426,8 @@ const createUser = async (req, res) => {
         message: "You don't have permission",
       });
     }
-    const { username, password, name, role, tel, partner_id, ref } = req.body;
-    if (
-      !username ||
-      !password ||
-      !name ||
-      !role ||
-      !tel ||
-      !partner_id ||
-      !ref
-    ) {
+    const { username, password, name, role, tel, partner_id } = req.body;
+    if (!username || !password || !name || !role || !tel || !partner_id) {
       return res.status(400).json({
         status: false,
         message: "Please fill in all fields",
@@ -457,7 +449,6 @@ const createUser = async (req, res) => {
           username: username,
           password: hashedPassword,
           partner_id: partner_id,
-          ref: ref,
         };
         const createUser = await adminService.createUser(data);
         if (!createUser) {
@@ -477,7 +468,8 @@ const createUser = async (req, res) => {
 };
 const getAllAdmin = async (req, res) => {
   try {
-    const user = await adminService.getAllAdmin();
+    const pdId = req.partnerId;
+    const user = await adminService.getAllAdmin(pdId);
     return res.status(200).json({
       status: true,
       data: user,

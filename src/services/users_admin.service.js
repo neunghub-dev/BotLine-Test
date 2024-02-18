@@ -23,9 +23,21 @@ const addUserAdmin = async (data) => {
   return user;
 };
 
-const getAllUserAdmin = async () => {
-  const user = await users_admins.findAll();
-  return user;
+const getAllUserAdmin = async (id) => {
+  console.log("-------");
+  console.log(id);
+  console.log("-------");
+  if (id === undefined || id === 0) {
+    const user = await users_admins.findAll();
+    return user;
+  } else {
+    const user = await users_admins.findAll({
+      where: {
+        partner_id: id,
+      },
+    });
+    return user;
+  }
 };
 
 const destroyUserAdmin = async (id) => {

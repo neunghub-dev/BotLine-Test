@@ -46,7 +46,7 @@ router.get(
 );
 router.get("/partner", partnerController.getAllPartners);
 router.get("/partners", partnerController.getPartnerByRefCode);
-router.get("/useradmin", userAdminController.getAllUser);
+router.get("/useradmin", [authJwt.verifyToken], userAdminController.getAllUser);
 router.delete("/useradmin/:id", userAdminController.destroyUser);
 router.put("/users/commision", usersController.addCommision);
 

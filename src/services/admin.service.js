@@ -13,11 +13,22 @@ const createUser = async (data) => {
   const createUser = await admins.create(data);
   return createUser;
 };
-const getAllAdmin = async () => {
-  const user = await admins.findAll({
-    attributes: ["id", "name", "tel", "username", "role"],
-  });
-  return user;
+const getAllAdmin = async (id) => {
+  if (id === undefined || id === 0) {
+    const user = await admins.findAll({
+      attributes: ["id", "name", "tel", "username", "role", "partner_id"],
+    });
+    return user;
+  } else {
+    const user = await admins.findAll({
+      attributes: ["id", "name", "tel", "username", "role", "partner_id"],
+      where: {
+        partner_id: id,
+      },
+    });
+    return user;
+  }
+
 };
 const getProfile = async (id) => {
   const user = await admins.findOne({
