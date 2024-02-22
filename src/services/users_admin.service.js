@@ -24,14 +24,24 @@ const addUserAdmin = async (data) => {
 };
 
 const getAllUserAdmin = async (id) => {
-  console.log("-------");
-  console.log(id);
-  console.log("-------");
   if (id === undefined || id === 0) {
-    const user = await users_admins.findAll();
+    const user = await users_admins.findAll({
+      include: [
+        {
+          model: db.partner,
+          attributes: ["name"],
+        },
+      ],
+    });
     return user;
   } else {
     const user = await users_admins.findAll({
+      include: [
+        {
+          model: db.partner,
+          attributes: ["name"],
+        },
+      ],
       where: {
         partner_id: id,
       },

@@ -8,9 +8,6 @@ const axios = require("axios");
 const getAllUser = async (req, res) => {
   try {
     const pdId = req.partnerId;
-    console.log("-------");
-    console.log(pdId);
-    console.log("-------");
     const user = await usersAdminService.getAllUserAdmin(pdId);
 
     return res.status(200).json({
