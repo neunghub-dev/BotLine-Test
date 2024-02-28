@@ -111,9 +111,12 @@ const hookMessageLine = async (req, res) => {
                   if (!item.isCancel) {
                     const user = await usersService.getCreadit(item.userId);
                     const newCredit = item.isDeduction
-                      ? user.credit - item.unit * 2
-                      : user.credit - item.unit;
-                    await usersService.updateCreditById(newCredit, item.userId);
+                      ? parseInt(user.credit) - item.unit * 2
+                      : parseInt(user.credit) - item.unit;
+                    await usersService.updateCreditById(
+                      parseFloat(newCredit),
+                      item.userId
+                    );
                     console.log(`newCredit ${newCredit}`);
                   }
                 }
@@ -126,10 +129,13 @@ const hookMessageLine = async (req, res) => {
                   const user = await usersService.getCreadit(item.userId);
                   const newCredit =
                     item.event === "win"
-                      ? user.credit - item.unit
-                      : user.credit + item.unit;
+                      ? parseInt(user.credit) - item.unit
+                      : parseInt(user.credit) + item.unit;
                   console.log(`newCredit ${newCredit} userId ${item.userId}`);
-                  await usersService.updateCreditById(newCredit, item.userId);
+                  await usersService.updateCreditById(
+                    parseFloat(newCredit),
+                    item.userId
+                  );
                   await transactionService.updateTransaction(item.id);
                 }
 
@@ -160,9 +166,12 @@ const hookMessageLine = async (req, res) => {
                   if (!item.isCancel) {
                     const user = await usersService.getCreadit(item.userId);
                     const newCredit = item.isDeduction
-                      ? user.credit + item.unit * 2
-                      : user.credit + item.unit;
-                    await usersService.updateCreditById(newCredit, item.userId);
+                      ? parseInt(user.credit) + item.unit * 2
+                      : parseInt(user.credit) + item.unit;
+                    await usersService.updateCreditById(
+                      parseFloat(newCredit),
+                      item.userId
+                    );
                     console.log(`newCredit1 ${newCredit}`);
                     const del = await roundService.destroyRoundDetail(item.id);
                   }
@@ -180,10 +189,13 @@ const hookMessageLine = async (req, res) => {
                   if (!item.isCancel) {
                     const user = await usersService.getCreadit(item.userId);
                     const newCredit = item.isDeduction
-                      ? user.credit - item.unit * 2
-                      : user.credit - item.unit;
+                      ? parseInt(user.credit) - item.unit * 2
+                      : parseInt(user.credit) - item.unit;
                     console.log(`newCredit2 ${newCredit}`);
-                    await usersService.updateCreditById(newCredit, item.userId);
+                    await usersService.updateCreditById(
+                      parseFloat(newCredit),
+                      item.userId
+                    );
                   }
                 });
                 const transaction =
@@ -195,10 +207,13 @@ const hookMessageLine = async (req, res) => {
                   const user = await usersService.getCreadit(item.userId);
                   const newCredit =
                     item.event === "win"
-                      ? user.credit - item.unit
-                      : user.credit + item.unit;
+                      ? parseInt(user.credit) - item.unit
+                      : parseInt(user.credit) + item.unit;
                   console.log(`newCredit ${newCredit} userId ${item.userId}`);
-                  await usersService.updateCreditById(newCredit, item.userId);
+                  await usersService.updateCreditById(
+                    parseFloat(newCredit),
+                    item.userId
+                  );
                   await transactionService.updateTransaction(item.id);
                 });
                 // step
@@ -241,9 +256,12 @@ const hookMessageLine = async (req, res) => {
                   console.log("before Credit", user.credit);
                   console.log("----------");
                   const newCredit = item.isDeduction
-                    ? user.credit - item.unit * 2
-                    : user.credit - item.unit;
-                  await usersService.updateCreditById(newCredit, item.userId);
+                    ? parseInt(user.credit) - item.unit * 2
+                    : parseInt(user.credit) - item.unit;
+                  await usersService.updateCreditById(
+                    parseFloat(newCredit),
+                    item.userId
+                  );
                   const users = await usersService.getCreadit(item.userId);
                   console.log("----------");
                   console.log(`newCredit Before Round ${newCredit}`);
@@ -263,9 +281,12 @@ const hookMessageLine = async (req, res) => {
                 console.log("----------");
                 const newCredit =
                   item.event === "lose"
-                    ? user.credit + item.unit
-                    : user.credit - item.unit;
-                await usersService.updateCreditById(newCredit, item.userId);
+                    ? parseInt(user.credit) + item.unit
+                    : parseInt(user.credit) - item.unit;
+                await usersService.updateCreditById(
+                  parseFloat(newCredit),
+                  item.userId
+                );
                 const users = await usersService.getCreadit(item.userId);
                 console.log("----------");
                 console.log(
@@ -983,9 +1004,9 @@ const cancelRound = async (replyToken, userId, groupId, token) => {
       const user = await usersService.getCreadit(item.userId);
       console.log(user);
       const newCredit = item.isDeduction
-        ? user.credit + item.unit * 2
-        : user.credit + item.unit;
-      await usersService.updateCreditById(newCredit, item.userId);
+        ? parseInt(user.credit) + item.unit * 2
+        : parseInt(user.credit) + item.unit;
+      await usersService.updateCreditById(parseFloat(newCredit), item.userId);
     }
     const update = await roundService.updateRoundDetail(deleteId);
     const cancelRound = await roundService.cancelRound(isRound.id);
@@ -1293,7 +1314,7 @@ const sortResult = async (
         i.totalIncome - i.totalBroken < 0
           ? `${i.totalIncome - i.totalBroken}`
           : `+${i.totalIncome - i.totalBroken}`
-      } = ${credit.credit + i.total}\n`,
+      } = ${parseInt(credit.credit) + i.total}\n`,
     };
     console.log(data);
     data1.push(data);
@@ -1499,16 +1520,31 @@ const calculateResult = async (data, result, token) => {
 };
 const confirmRound = async (replyToken, userId, groupId, token, pn) => {
   const round = await roundService.getCloseRoundAndinProgress(groupId);
+
   const result = [
-    `s${round.k0}`,
-    round.k1,
-    round.k2,
-    round.k3,
-    round.k4,
-    round.k5,
-    round.k6,
+    `s${round?.k0 === undefined ? "" : round.k0}`,
+    round?.k1 === undefined ? "" : round.k1,
+    round?.k2 === undefined ? "" : round.k2,
+    round?.k3 === undefined ? "" : round.k3,
+    round?.k4 === undefined ? "" : round.k4,
+    round?.k5 === undefined ? "" : round.k5,
+    round?.k6 === undefined ? "" : round.k6,
   ];
-  // const countOfNull = result.filter((value) => value === null).length;
+  console.log(result);
+  const countOfNull = result.filter(
+    (value) => value === "" || value === null
+  ).length;
+  if (countOfNull > 0) {
+    BotEvent.replyMessage(
+      replyToken,
+      {
+        type: "text",
+        text: "กรุณาใส่ผลสรุปก่อนปิดยอด",
+      },
+      token
+    );
+  }
+
   // if (countOfNull === 0) {
 
   // }
@@ -1599,8 +1635,8 @@ const confirmRound = async (replyToken, userId, groupId, token, pn) => {
       sumTotal += item.balance;
       sumBroken += item.totalBroken;
       const user = await usersService.getCreadit(item.userId);
-      const newCredit = user.credit + item.total;
-      await usersService.addCredit(newCredit, item.userId);
+      const newCredit = parseInt(user.credit) + item.total;
+      await usersService.addCredit(parseFloat(newCredit), item.userId);
     }
 
     const close = await roundService.closeStatus(round.id, groupId);
@@ -1663,7 +1699,7 @@ const cancel = async (replyToken, userId, groupId, token) => {
         msgString += `❌ ยกเลิกของรอบ ${isRound.round}\n\n`;
         msgString += "-------------------\n";
         msgString += `➡️ คืนเงิน ${total} บ.\n`;
-        msgString += `💵 คงเหลือ ${val.credit + total} บ.\n`;
+        msgString += `💵 คงเหลือ ${parseInt(val.credit) + total} บ.\n`;
       } else {
         msgString += `คุณไม่มียอดแทงในรอบ ${isRound.round}\n`;
       }
@@ -1671,7 +1707,7 @@ const cancel = async (replyToken, userId, groupId, token) => {
       const update = await roundService.updateRoundDetail(deleteId);
 
       const updateCredit = usersService.updateCredit(
-        val.credit + total,
+        parseInt(val.credit) + total,
         userId
       );
       if (update && updateCredit) {
@@ -1923,10 +1959,10 @@ const playPok = async (replyToken, userId, groupId, message, token) => {
             const val = await usersService.getCreaditByuserId(userId);
             let isCheck = false;
             let isDeduction = false;
-            if (val.credit >= total * 2) {
+            if (parseInt(val.credit) >= total * 2) {
               total = total * 2;
               isDeduction = true;
-            } else if (val.credit >= total) {
+            } else if (parseInt(val.credit) >= total) {
               total = total;
               isDeduction = false;
             } else {
@@ -1962,7 +1998,7 @@ const playPok = async (replyToken, userId, groupId, message, token) => {
                   roundDetailData
                 );
                 const updateCredit = usersService.updateCredit(
-                  val.credit - total,
+                  parseInt(val.credit) - total,
                   userId
                 );
 
