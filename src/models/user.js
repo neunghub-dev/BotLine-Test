@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       tel: DataTypes.STRING,
       uuid_line: DataTypes.STRING,
       line_id: DataTypes.STRING,
-      credit: DataTypes.DOUBLE,
+      credit: DataTypes.DECIMAL(10, 1),
       bonus: DataTypes.DOUBLE,
       partner_id: DataTypes.INTEGER,
       ref: DataTypes.STRING,

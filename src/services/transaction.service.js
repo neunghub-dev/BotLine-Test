@@ -14,6 +14,7 @@ const getAllTransactionNoCancel = async (id) => {
   if (id === undefined || id === 0) {
     tc = await transaction.findAll({
       where: {
+        isSelect: true,
         [Op.or]: [
           { event: "withdraw" },
           { event: "add" },
@@ -25,6 +26,7 @@ const getAllTransactionNoCancel = async (id) => {
   } else {
     tc = await transaction.findAll({
       where: {
+        isSelect: true,
         partner_id: id,
         [Op.or]: [
           { event: "withdraw" },
@@ -55,6 +57,7 @@ const getAllTransaction = async (id) => {
   const tc = await transaction.findAll({
     where: {
       isCancel: false,
+      isSelect: true,
       [Op.or]: [
         { event: "withdraw" },
         { event: "add" },
@@ -66,6 +69,20 @@ const getAllTransaction = async (id) => {
   return tc;
 };
 
+const getAllTransactionNoselect = async (id) => {
+  const tc = await transaction.findAll({
+    where: {
+      isCancel: false,
+      [Op.or]: [
+        { event: "withdraw" },
+        { event: "add" },
+        { event: "bonus" },
+        { event: "comission" },
+      ],
+    },
+  });
+  return tc;
+};
 //get Win Lose And sum
 const getWinLose = async (id) => {
   const tc = await transaction.findAll({
@@ -114,55 +131,126 @@ const updateTransaction = async (id) => {
 
 const getAllByDate = async (start, end, id) => {
   // Constructing the query
+
+  let startDate = start;
+  const startDatedate = new Date(startDate);
+  const formattedstartDate = startDatedate.toISOString().split("T")[0];
+
+  let endDate = end;
+  const endDatedate = new Date(endDate);
+  const formattedendDate = endDatedate.toISOString().split("T")[0];
+
+  console.log(startDate);
   let transactions = [];
   if (id === undefined || id === "0") {
-    transactions = await transaction.findAll({
-      attributes: [
-        "event",
-        [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
-        "date",
-      ],
-      where: {
-        [Op.or]: [
-          { event: "withdraw" },
-          { event: "add" },
-          { event: "bonus" },
-          { event: "comission" },
+    if (formattedstartDate === formattedendDate) {
+      transactions = await transaction.findAll({
+        attributes: [
+          "event",
+          [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
+          "date",
         ],
-        createdAt: {
-          [Op.between]: [start, end],
+        where: {
+          isSelect: true,
+          [Op.or]: [
+            { event: "withdraw" },
+            { event: "add" },
+            { event: "bonus" },
+            { event: "comission" },
+          ],
+          createdAt: {
+            [Op.between]: [start, end],
+          },
         },
-      },
-      group: ["event", "date"],
-      order: [["date", "DESC"]],
-    });
+        group: ["event", "date"],
+        order: [["date", "DESC"]],
+      });
+    } else {
+      transactions = await transaction.findAll({
+        attributes: [
+          "event",
+          [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
+          "date",
+        ],
+        where: {
+          [Op.or]: [
+            { event: "withdraw" },
+            { event: "add" },
+            { event: "bonus" },
+            { event: "comission" },
+          ],
+          createdAt: {
+            [Op.between]: [start, end],
+          },
+        },
+        group: ["event", "date"],
+        order: [["date", "DESC"]],
+      });
+    }
   } else {
-    transactions = await transaction.findAll({
-      attributes: [
-        "event",
-        [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
-        "date",
-      ],
-      where: {
-        [Op.or]: [
-          { event: "withdraw" },
-          { event: "add" },
-          { event: "bonus" },
-          { event: "comission" },
+    if (formattedstartDate === formattedendDate) {
+      transactions = await transaction.findAll({
+        attributes: [
+          "event",
+          [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
+          "date",
         ],
-        createdAt: {
-          [Op.between]: [start, end],
+        where: {
+          isSelect: true,
+          [Op.or]: [
+            { event: "withdraw" },
+            { event: "add" },
+            { event: "bonus" },
+            { event: "comission" },
+          ],
+          createdAt: {
+            [Op.between]: [start, end],
+          },
+          partner_id: parseInt(id),
         },
-        partner_id: parseInt(id),
-      },
-      group: ["event", "date"],
-      order: [["date", "DESC"]],
-    });
+        group: ["event", "date"],
+        order: [["date", "DESC"]],
+      });
+    } else {
+      transactions = await transaction.findAll({
+        attributes: [
+          "event",
+          [db.sequelize.fn("SUM", db.sequelize.col("unit")), "totalUnits"],
+          "date",
+        ],
+        where: {
+          [Op.or]: [
+            { event: "withdraw" },
+            { event: "add" },
+            { event: "bonus" },
+            { event: "comission" },
+          ],
+          createdAt: {
+            [Op.between]: [start, end],
+          },
+          partner_id: parseInt(id),
+        },
+        group: ["event", "date"],
+        order: [["date", "DESC"]],
+      });
+    }
   }
 
   return transactions;
 };
+const updateIsSelect = async (id) => {
+  const tc = await transaction.update(
+    { isSelect: false },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  return tc;
+};
 module.exports = {
+  updateIsSelect,
   getAllByDate,
   getWinLoseById,
   getAllTransactionNoCancel,
@@ -172,4 +260,5 @@ module.exports = {
   createTransaction,
   getAllTransaction,
   getWinLoseCom,
+  getAllTransactionNoselect,
 };

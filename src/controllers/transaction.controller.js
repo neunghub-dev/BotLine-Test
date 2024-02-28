@@ -8,7 +8,7 @@ const getAllTransaction = async (req, res) => {
         message: "permission denied",
       });
     }
-    const user = await transactionService.getAllTransaction();
+    const user = await transactionService.getAllTransactionNoselect();
     return res.status(200).json({
       status: true,
       messaage: "Get all transaction success",

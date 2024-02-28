@@ -1,6 +1,7 @@
 const usersService = require("../services/users.service");
 const transactionService = require("../services/transaction.service");
 const adminService = require("../services/admin.service");
+const partnerService = require("../services/partner.service");
 const bcrypt = require("bcryptjs");
 
 const getAlluser = async (req, res) => {
@@ -25,6 +26,7 @@ const getAlluser = async (req, res) => {
       // });
     }
     // const user = await usersService.getAlluser();
+
     const json = JSON.stringify(user);
     const userJson = JSON.parse(json);
     const newData = userJson.map((item) => ({
@@ -37,12 +39,15 @@ const getAlluser = async (req, res) => {
       total: 0,
       allWin: 0,
       allLose: 0,
+      isWin: 0,
+      isLose: 0,
       allCommision: 0,
+      partner: {},
     }));
 
     const tc = await transactionService.getWinLose();
     const tcm = await transactionService.getWinLoseCom();
-    console.log(tcm);
+    // console.log(tcm);
     const allTransaction = await transactionService.getAllTransaction();
 
     const bonus = [];
@@ -162,11 +167,22 @@ const getAlluser = async (req, res) => {
         user.bonus = bonus + comission;
         user.add = add;
         user.withdraw = withdraw;
-        user.credit = user.credit + user.bonus;
+        user.credit = user.credit;
       }
       let win = 0;
       let lose = 0;
+      let iswin = 0;
+      let islose = 0;
       bonus.forEach((event) => {
+        if (event.userId === user.id) {
+          event.data.forEach((event) => {
+            if (event.event === "win") {
+              iswin += event.unit;
+            } else if (event.event === "lose") {
+              islose += event.unit;
+            }
+          });
+        }
         if (event.invite_id === user.id) {
           event.data.forEach((event) => {
             if (event.event === "win") {
@@ -200,12 +216,17 @@ const getAlluser = async (req, res) => {
       user.allCommision = total <= 0 ? 0 : total * 0.005;
       user.win = win;
       user.lose = lose;
+      user.isWin = iswin;
+      user.isLose = islose;
     });
-    newData.forEach((user) => {
+
+    for (let user of newData) {
       const total = user.win + user.lose;
       user.commision = total <= 0 ? 0 : total * 0.005;
-      user.total = user.credit + user.bonus;
-    });
+      user.total = user.credit;
+      user.partner = await partnerService.getPartnerById(user.partner_id);
+    }
+
     // console.log(user);
     return res.status(200).json({
       status: true,
@@ -230,7 +251,6 @@ const addCommision = async (req, res) => {
   const arrayOfIds = userJson.map((obj) => obj.id);
 
   const transaction = await transactionService.getWinLoseById(arrayOfIds);
-  console.log(transaction);
 
   let winSum = 0;
   let loseSum = 0;
@@ -246,8 +266,12 @@ const addCommision = async (req, res) => {
   });
   let total = (winSum + loseSum) * 0.005;
   if (total > 0) {
-    const newCredit = parseInt(user.credit) + parseInt(total);
-    const addCredit = await usersService.addCredit(newCredit, userId);
+    const newCredit = parseFloat(user.credit) + parseFloat(total);
+    console.log(newCredit);
+    const addCredit = await usersService.addCredit(
+      parseFloat(newCredit),
+      userId
+    );
 
     if (addCredit) {
       for (let x of transaction) {
@@ -261,6 +285,7 @@ const addCommision = async (req, res) => {
       unit: total,
       event: "comission",
       adminId: adminId,
+      isSelect: true,
       isCancel: false,
       partner_id: user.partner_id,
       date: startDate,
@@ -320,6 +345,7 @@ const manageCredit = async (req, res) => {
               unit: credit,
               event: "add",
               adminId: adminId,
+              isSelect: true,
               isCancel: false,
               partner_id: getUser.partner_id,
               date: currentDate,
@@ -358,6 +384,7 @@ const manageCredit = async (req, res) => {
                 unit: credit,
                 event: "withdraw",
                 adminId: adminId,
+                isSelect: true,
                 isCancel: false,
                 partner_id: getUser.partner_id,
                 date: currentDate,
@@ -391,6 +418,7 @@ const manageCredit = async (req, res) => {
               unit: credit,
               event: "bonus",
               adminId: adminId,
+              isSelect: true,
               isCancel: false,
               partner_id: getUser.partner_id,
               date: currentDate,

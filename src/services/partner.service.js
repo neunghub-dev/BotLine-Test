@@ -26,8 +26,19 @@ const getPartnerByRefCode = async (refCode) => {
   });
   return partners;
 };
+
+const getPartnerById = async (id) => {
+  const partners = partner.findOne({
+    attributes: ["name"],
+    where: {
+      id: id,
+    },
+  });
+  return partners;
+};
 module.exports = {
   getPartnerByRefCode,
   getPartnerByDestination,
   getAllPartner,
+  getPartnerById,
 };

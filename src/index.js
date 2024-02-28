@@ -24,6 +24,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1", routes);
 
 cron.clearRound();
+cron.updateIsSelectRound();
 // // app.post("/webhook", (req, res) => {
 
 // const clearDailyOrders = cron.schedule("38 10 * * *", () => {

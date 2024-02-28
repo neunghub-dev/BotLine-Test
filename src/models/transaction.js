@@ -21,9 +21,10 @@ module.exports = (sequelize, DataTypes) => {
       adminId: DataTypes.INTEGER,
       isCancel: DataTypes.BOOLEAN,
       isComission: DataTypes.BOOLEAN,
+      isSelect: DataTypes.BOOLEAN,
       roundId: DataTypes.INTEGER,
       partner_id: DataTypes.INTEGER,
-      date : DataTypes.DATE
+      date: DataTypes.DATE,
     },
     {
       sequelize,

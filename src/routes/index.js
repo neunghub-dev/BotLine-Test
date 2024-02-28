@@ -48,6 +48,10 @@ router.get("/partner", partnerController.getAllPartners);
 router.get("/partners", partnerController.getPartnerByRefCode);
 router.get("/useradmin", [authJwt.verifyToken], userAdminController.getAllUser);
 router.delete("/useradmin/:id", userAdminController.destroyUser);
-router.put("/users/commision", usersController.addCommision);
+router.put(
+  "/users/commision",
+  [authJwt.verifyToken],
+  usersController.addCommision
+);
 
 module.exports = router;
