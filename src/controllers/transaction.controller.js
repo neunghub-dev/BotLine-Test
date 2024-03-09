@@ -14,7 +14,9 @@ const getAllTransaction = async (req, res) => {
       messaage: "Get all transaction success",
       data: user,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const getAllTransactionByPartner = async (req, res) => {
@@ -64,6 +66,7 @@ const convertToUTCPlus7 = async (dateStr) => {
 const getAllTransactionByDate = async (req, res) => {
   try {
     const { start, end, partner_id } = req.query;
+
     const startDate = new Date(start);
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(end);

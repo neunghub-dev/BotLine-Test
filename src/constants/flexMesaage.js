@@ -64,34 +64,12 @@ const startRound = (data) => {
     altText: "คุณได้รับข้อความ",
     contents: {
       type: "bubble",
-      direction: "ltr",
-      header: {
-        type: "box",
-        layout: "vertical",
-        flex: 1,
-        spacing: "none",
-        margin: "none",
-        position: "relative",
-        contents: [
-          {
-            type: "image",
-            url: "https://hookpd.pd789.co/img/w12.png",
-            size: "full",
-            aspectRatio: "20:13",
-            aspectMode: "cover",
-          },
-          //   {
-          //     type: "text",
-          //     text: data.name,
-          //     weight: "regular",
-          //     flex: 1,
-          //     align: "center",
-          //     gravity: "center",
-          //     style: "normal",
-          //     position: "relative",
-          //     contents: [],
-          //   },
-        ],
+      hero: {
+        type: "image",
+        url: "https://hookpd.pd789.co/img/w12.png",
+        size: "full",
+        aspectRatio: "20:13",
+        aspectMode: "cover",
       },
       body: {
         type: "box",
@@ -99,9 +77,11 @@ const startRound = (data) => {
         contents: [
           {
             type: "text",
-            text: `${data}`,
+            text: data,
+            weight: "bold",
+            size: "xl",
+            style: "normal",
             align: "center",
-            contents: [],
           },
         ],
       },

@@ -71,6 +71,26 @@ const getAllTransaction = async (id) => {
 
 const getAllTransactionNoselect = async (id) => {
   const tc = await transaction.findAll({
+    include: [
+      {
+        model: db.Users,
+        attributes: ["id", "name"],
+      },
+      {
+        model: db.admins,
+        attributes: ["id", "name"],
+      },
+    ],
+    where: {
+      isSelect: false,
+      isCancel: false,
+      [Op.or]: [
+        { event: "withdraw" },
+        { event: "add" },
+        { event: "bonus" },
+        { event: "comission" },
+      ],
+    },
     where: {
       isCancel: false,
       [Op.or]: [
@@ -141,9 +161,15 @@ const getAllByDate = async (start, end, id) => {
   const formattedendDate = endDatedate.toISOString().split("T")[0];
 
   console.log(startDate);
+  console.log(endDate);
+
+  const currentDate = new Date();
+
+  // Check if it's March 1st, 2024
+
   let transactions = [];
   if (id === undefined || id === "0") {
-    if (formattedstartDate === formattedendDate) {
+    if (currentDate.toDateString() === startDate.toDateString()) {
       transactions = await transaction.findAll({
         attributes: [
           "event",
@@ -188,7 +214,7 @@ const getAllByDate = async (start, end, id) => {
       });
     }
   } else {
-    if (formattedstartDate === formattedendDate) {
+    if (currentDate.toDateString() === startDate.toDateString()) {
       transactions = await transaction.findAll({
         attributes: [
           "event",

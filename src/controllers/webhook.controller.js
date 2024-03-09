@@ -1482,10 +1482,10 @@ const calculateResult = async (data, result, token) => {
           dataPlayer.income = Math.floor((dataPlayer.unit * 90) / 100);
         } else {
           console.log(8);
-          dataPlayer.total = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.total = Math.floor((dataPlayer.unit * 90) / 100);
           dataPlayer.deduction = 0;
           dataPlayer.net += dataPlayer.unit;
-          dataPlayer.income = Math.floor((dataPlayer.unit * 2 * 90) / 100);
+          dataPlayer.income = Math.floor((dataPlayer.unit * 90) / 100);
         }
       }
     }
@@ -1495,6 +1495,7 @@ const calculateResult = async (data, result, token) => {
       if (dataPlayer.isDeduction) {
         dataPlayer.broken += dataPlayer.unit * 2;
         dataPlayer.total += 0;
+        dataPlayer.totalBroken += dataPlayer.broken;
       } else {
         dataPlayer.broken += dataPlayer.unit * 1;
         dataPlayer.total += 0;
@@ -1504,9 +1505,11 @@ const calculateResult = async (data, result, token) => {
       if (dataPlayer.isDeduction) {
         dataPlayer.broken += dataPlayer.unit * 1;
         dataPlayer.total += dataPlayer.unit * 1;
+        dataPlayer.totalBroken += dataPlayer.broken;
       } else {
-        dataPlayer.broken += 0;
+        dataPlayer.broken += dataPlayer.unit * 1;
         dataPlayer.total += 0;
+        dataPlayer.totalBroken += dataPlayer.broken;
       }
     }
   } else {
